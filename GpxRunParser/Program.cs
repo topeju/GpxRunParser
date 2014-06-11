@@ -13,13 +13,15 @@ namespace GpxRunParser
 	{
 		private static void Main(string[] args)
 		{
-			var fileName = @"D:\Data\Dropbox\Apps\iSmoothRun\Export\2014-06-09T17_26_45+300_Running.gpx";
+			var fileName = "";
 			var zoneStr = "120,140,173,182";
 			var paceBinStr = "8:45,7:15,6:10";
+			var help = false;
 			var opts = new OptionSet {
 				{ "f|file=", "GPX file to parse", s => fileName = s },
 				{ "z|zones=", "Heart rate zone limits, comma-separated", s => zoneStr = s },
-				{ "p|paces=", "Pace bin limits, comma-separated mm:ss", s => paceBinStr = s }
+				{ "p|paces=", "Pace bin limits, comma-separated mm:ss", s => paceBinStr = s },
+				{ "h|?|help", "Show this help text", s => help = s != null }
 			};
 			try {
 				opts.Parse(args);
@@ -30,17 +32,26 @@ namespace GpxRunParser
 				Console.Error.WriteLine("Try GpxRunParser --help for more information");
 				return;
 			}
-			if (fileName == "") throw new OptionException("file", "The file parameter must be specified");
+			if (help) {
+				Console.Out.WriteLine ("Usage: GpxRunParser [OPTIONS]+");
+				Console.Out.WriteLine ("Parses the GPX file specified using the -f option to calculate statistics on the file.");
+				opts.WriteOptionDescriptions (Console.Out);
+				return;
+			}
+			if (fileName == "") {
+				Console.Error.WriteLine ("Input GPX file not specified");
+				return;
+			}
 			var zones = (from zone in zoneStr.Split(',') select double.Parse(zone, CultureInfo.InvariantCulture)).ToArray();
 			var paces =
 				(from paceStr in paceBinStr.Split(',')
-				 select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1])).TotalMinutes).ToArray();
+				 select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1]))).ToArray();
 
 			var gpxNamespace = XNamespace.Get("http://www.topografix.com/GPX/1/1");
 			var gpxDoc = XDocument.Load(fileName);
 
-			var zoneBins = new TimeBin(zones);
-			var paceBins = new TimeBin(paces);
+			var zoneBins = new TimeBin<double>(zones);
+			var paceBins = new TimeBin<TimeSpan>(paces);
 			var totalTime = TimeSpan.Zero;
 			var totalDistance = 0.0D;
 
@@ -56,9 +67,9 @@ namespace GpxRunParser
 							var dist = p0.DistanceTo(pt);
 							totalDistance += dist;
 							var deltaT = p0.TimeDifference(pt);
-							totalTime += deltaT;
-							var pace = deltaT.TotalMinutes * 1000.0D / dist;
 							zoneBins.Record(p0.HeartRate, deltaT);
+							totalTime += deltaT;
+							var pace = new TimeSpan((long)(1000.0D * deltaT.Ticks / dist));
 							paceBins.Record(pace, deltaT);
 							p0 = pt;
 						}
@@ -85,15 +96,15 @@ namespace GpxRunParser
 		}
 	}
 
-	public class TimeBin
+	public class TimeBin<T> where T : IComparable
 	{
-		private double[] Bins { get; set; }
+		private T[] Bins { get; set; }
 
 		private TimeSpan[] Values { get; set; }
 
-		public TimeBin(double[] boundaries)
+		public TimeBin(T[] boundaries)
 		{
-			Bins = new double[boundaries.Length];
+			Bins = new T[boundaries.Length];
 			Values = new TimeSpan[boundaries.Length + 1];
 			var i = 0;
 			Values[0] = TimeSpan.Zero;
@@ -104,22 +115,22 @@ namespace GpxRunParser
 			}
 		}
 
-		public void Record(double value, TimeSpan time)
+		public void Record(T value, TimeSpan time)
 		{
 			var i = Bins.Length-1;
-			while (i >= 0 && Bins[i] > value) i--;
+			while (i >= 0 && Bins[i].CompareTo(value) > 0) i--;
 			Values[i+1] += time;
 		}
 
 		public void Output(StreamWriter stream, TimeSpan totalTime)
 		{
-			stream.WriteLine("{0,-20}\t{1:g}\t{2:P0}", "< " + Bins[0], Values[0],
+			stream.WriteLine("< {0,-18}\t{1:g}\t{2:P0}", Bins[0], Values[0],
 								  Values[0].TotalMilliseconds / totalTime.TotalMilliseconds);
 			for (var i = 0; i < Bins.Length - 1; i++) {
 				stream.WriteLine("{0,-20}\t{1:g}\t{2:P0}", Bins[i] + "..." + Bins[i + 1], Values[i + 1],
 									  Values[i+1].TotalMilliseconds / totalTime.TotalMilliseconds);
 			}
-			stream.WriteLine("{0,-20}\t{1:g}\t{2:P0}", "> " + Bins[Bins.Length - 1], Values[Bins.Length],
+			stream.WriteLine("> {0,-18}\t{1:g}\t{2:P0}", Bins[Bins.Length - 1], Values[Bins.Length],
 								  Values[Bins.Length].TotalMilliseconds / totalTime.TotalMilliseconds);
 		}
 	}
