@@ -33,13 +33,13 @@ namespace GpxRunParser
 				return;
 			}
 			if (help) {
-				Console.Out.WriteLine ("Usage: GpxRunParser [OPTIONS]+");
-				Console.Out.WriteLine ("Parses the GPX file specified using the -f option to calculate statistics on the file.");
-				opts.WriteOptionDescriptions (Console.Out);
+				Console.Out.WriteLine("Usage: GpxRunParser [OPTIONS]+");
+				Console.Out.WriteLine("Parses the GPX file specified using the -f option to calculate statistics on the file.");
+				opts.WriteOptionDescriptions(Console.Out);
 				return;
 			}
 			if (fileName == "") {
-				Console.Error.WriteLine ("Input GPX file not specified");
+				Console.Error.WriteLine("Input GPX file not specified");
 				return;
 			}
 			var zones = (from zone in zoneStr.Split(',') select double.Parse(zone, CultureInfo.InvariantCulture)).ToArray();
@@ -54,6 +54,9 @@ namespace GpxRunParser
 			var paceBins = new TimeBin<TimeSpan>(paces);
 			var totalTime = TimeSpan.Zero;
 			var totalDistance = 0.0D;
+			var heartTotal = 0.0D;
+			var maxHeartRate = 0.0D;
+			var steps = 0.0D;
 
 			foreach (var track in gpxDoc.Descendants(gpxNamespace + "trk")) {
 				foreach (var segment in track.Descendants(gpxNamespace + "trkseg")) {
@@ -71,6 +74,11 @@ namespace GpxRunParser
 							totalTime += deltaT;
 							var pace = new TimeSpan((long)(1000.0D * deltaT.Ticks / dist));
 							paceBins.Record(pace, deltaT);
+							heartTotal += p0.HeartRate * deltaT.TotalMinutes;
+							if (p0.HeartRate > maxHeartRate) {
+								maxHeartRate = p0.HeartRate;
+							}
+							steps += p0.Cadence * deltaT.TotalMinutes;
 							p0 = pt;
 						}
 					}
@@ -83,6 +91,12 @@ namespace GpxRunParser
 			using (var output = File.CreateText(outputFileName)) {
 				output.WriteLine("Total distance:\t{0:N2} km", totalDistance/1000.0D);
 				output.WriteLine("Total time:\t{0:g}", totalTime);
+				output.WriteLine("Average pace:\t{0:g}/km", new TimeSpan((long)(1000.0D * totalTime.Ticks / totalDistance)));
+				output.WriteLine("Average speed:\t{0:N2} km/h", totalDistance / (1000.0D * totalTime.TotalHours));
+				output.WriteLine("Avg heart rate:\t{0:N0}", heartTotal / totalTime.TotalMinutes);
+				output.WriteLine("Max heart rate:\t{0:N0}", maxHeartRate);
+				output.WriteLine("Total steps:\t{0:N0}", steps);
+				output.WriteLine("Avg cadence:\t{0:N0}", steps / totalTime.TotalMinutes);
 				output.WriteLine();
 
 				output.WriteLine("Time spent in each heart rate zone:");
