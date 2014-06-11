@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -56,7 +55,7 @@ namespace GpxRunParser
 			var totalDistance = 0.0D;
 			var heartTotal = 0.0D;
 			var maxHeartRate = 0.0D;
-			var steps = 0.0D;
+			var totalSteps = 0.0D;
 
 			foreach (var track in gpxDoc.Descendants(gpxNamespace + "trk")) {
 				foreach (var segment in track.Descendants(gpxNamespace + "trkseg")) {
@@ -65,6 +64,9 @@ namespace GpxRunParser
 					var iterator = points.GetEnumerator();
 					if (iterator.MoveNext()) {
 						var p0 = iterator.Current;
+						if (p0.HeartRate > maxHeartRate) {
+							maxHeartRate = p0.HeartRate;
+						}
 						while (iterator.MoveNext()) {
 							var pt = iterator.Current;
 							var dist = p0.DistanceTo(pt);
@@ -75,10 +77,10 @@ namespace GpxRunParser
 							var pace = new TimeSpan((long)(1000.0D * deltaT.Ticks / dist));
 							paceBins.Record(pace, deltaT);
 							heartTotal += p0.HeartRate * deltaT.TotalMinutes;
-							if (p0.HeartRate > maxHeartRate) {
-								maxHeartRate = p0.HeartRate;
+							if (pt.HeartRate > maxHeartRate) {
+								maxHeartRate = pt.HeartRate;
 							}
-							steps += p0.Cadence * deltaT.TotalMinutes;
+							totalSteps += 2.0D * p0.Cadence * deltaT.TotalMinutes; // Cadence is number of full cycles per minute by the pair of feet, thus there are two steps per cadence per minute?
 							p0 = pt;
 						}
 					}
@@ -89,14 +91,15 @@ namespace GpxRunParser
 			var outputFileName = extRegexp.Replace(fileName, ".txt");
 
 			using (var output = File.CreateText(outputFileName)) {
-				output.WriteLine("Total distance:\t{0:N2} km", totalDistance/1000.0D);
-				output.WriteLine("Total time:\t{0:g}", totalTime);
-				output.WriteLine("Average pace:\t{0:g}/km", new TimeSpan((long)(1000.0D * totalTime.Ticks / totalDistance)));
-				output.WriteLine("Average speed:\t{0:N2} km/h", totalDistance / (1000.0D * totalTime.TotalHours));
-				output.WriteLine("Avg heart rate:\t{0:N0}", heartTotal / totalTime.TotalMinutes);
-				output.WriteLine("Max heart rate:\t{0:N0}", maxHeartRate);
-				output.WriteLine("Total steps:\t{0:N0}", steps);
-				output.WriteLine("Avg cadence:\t{0:N0}", steps / totalTime.TotalMinutes);
+				output.WriteLine("{0,-20}  {1:N2} km", "Total distance:", totalDistance/1000.0D);
+				output.WriteLine("{0,-20}  {1:g}", "Total time:", totalTime);
+				output.WriteLine("{0,-20}  {1:g}/km", "Average pace:", new TimeSpan((long)(1000.0D * totalTime.Ticks / totalDistance)));
+				output.WriteLine("{0,-20}  {1:N2} km/h", "Average speed:", totalDistance / (1000.0D * totalTime.TotalHours));
+				output.WriteLine("{0,-20}  {1:N0} beats/minute", "Average heart rate:", heartTotal / totalTime.TotalMinutes);
+				output.WriteLine("{0,-20}  {1:N0} beats/minute", "Max heart rate:", maxHeartRate);
+				output.WriteLine("{0,-20}  {1:N0}", "Total steps:", totalSteps);
+				output.WriteLine("{0,-20}  {1:N0}", "Average cadence:", totalSteps / (2.0D * totalTime.TotalMinutes));
+				output.WriteLine("{0,-20}  {1:N0} cm", "Avg stride length:", totalDistance * 100.0D / totalSteps);
 				output.WriteLine();
 
 				output.WriteLine("Time spent in each heart rate zone:");
@@ -107,45 +110,6 @@ namespace GpxRunParser
 				paceBins.Output(output, totalTime);
 			}
 
-		}
-	}
-
-	public class TimeBin<T> where T : IComparable
-	{
-		private T[] Bins { get; set; }
-
-		private TimeSpan[] Values { get; set; }
-
-		public TimeBin(T[] boundaries)
-		{
-			Bins = new T[boundaries.Length];
-			Values = new TimeSpan[boundaries.Length + 1];
-			var i = 0;
-			Values[0] = TimeSpan.Zero;
-			foreach (var b in boundaries.OrderBy(bnd => bnd)) {
-				Bins[i] = b;
-				Values[i+1] = TimeSpan.Zero;
-				i++;
-			}
-		}
-
-		public void Record(T value, TimeSpan time)
-		{
-			var i = Bins.Length-1;
-			while (i >= 0 && Bins[i].CompareTo(value) > 0) i--;
-			Values[i+1] += time;
-		}
-
-		public void Output(StreamWriter stream, TimeSpan totalTime)
-		{
-			stream.WriteLine("< {0,-18}\t{1:g}\t{2:P0}", Bins[0], Values[0],
-								  Values[0].TotalMilliseconds / totalTime.TotalMilliseconds);
-			for (var i = 0; i < Bins.Length - 1; i++) {
-				stream.WriteLine("{0,-20}\t{1:g}\t{2:P0}", Bins[i] + "..." + Bins[i + 1], Values[i + 1],
-									  Values[i+1].TotalMilliseconds / totalTime.TotalMilliseconds);
-			}
-			stream.WriteLine("> {0,-18}\t{1:g}\t{2:P0}", Bins[Bins.Length - 1], Values[Bins.Length],
-								  Values[Bins.Length].TotalMilliseconds / totalTime.TotalMilliseconds);
 		}
 	}
 }
