@@ -1,22 +1,101 @@
-﻿@model GpxRunParser.RunStats
+﻿@inherits GpxRunParser.Templates.ModelTemplate<RunStats>
 <html>
 	<head>
 		<title></title>
 	</head>
 	<body>
+		
+		<h1>Statistics for a run on @(Model.StartTime)</h1>
+		
+		<h2>Overall statistics</h2>
 
-	<table>
-		<tbody>
+		<table>
+			<tbody>
+				<tr>
+					<th>Total distance</th>
+					<td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
+				</tr>
+				<tr>
+					<th>Total time</th>
+					<td>@(Model.TotalTime.ToString("g"))</td>
+				</tr>
+				<tr>
+					<th>Average pace</th>
+					<td>@(Model.AveragePace.ToString("g"))/km</td>
+				</tr>
+				<tr>
+					<th>Average speed</th>
+					<td>@(Model.AverageSpeed.ToString("N2")) km/h</td>
+				</tr>
+				<tr>
+					<th>Average heart rate</th>
+					<td>@(Model.AverageHeartRate.ToString("N0")) beats/minute</td>
+				</tr>
+				<tr>
+					<th>Maximum heart rate</th>
+					<td>@(Model.MaxHeartRate.ToString("N0")) beats/minute</td>
+				</tr>
+				<tr>
+					<th>Total steps</th>
+					<td>@(Model.TotalSteps.ToString("N0"))</td>
+				</tr>
+				<tr>
+					<th>Average cadence</th>
+					<td>@(Model.AverageCadence.ToString("N0"))</td>
+				</tr>
+				<tr>
+					<th>Average stride length</th>
+					<td>@(Model.AverageStrideLength.ToString("N0")) cm</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		<h2>Time spent in each heart rate zone</h2>
+		@{
+			var totalTime = Model.TotalTime.TotalMilliseconds;
+		}
+
+		<table>
 			<tr>
-				<th>Total distance</th>
-				<td>@(Model.TotalDistanceInKm) km</td>
+				<th>&lt; @(Model.ZoneBins.Bins[0])</th>
+				<td>@(Model.ZoneBins.Values[0])</td>
+				<td>@((Model.ZoneBins.Values[0].TotalMilliseconds / totalTime).ToString("P0"))</td>
 			</tr>
+			@for (var i = 0; i < Model.ZoneBins.Bins.Length - 1; i++) {
+				<tr>
+					<th>@(Model.ZoneBins.Bins[i])...@(Model.ZoneBins.Bins[i + 1])</th>
+					<td>@(Model.ZoneBins.Values[i + 1])</td>
+					<td>@((Model.ZoneBins.Values[i + 1].TotalMilliseconds / totalTime).ToString("P0"))</td>
+				</tr>
+			}
 			<tr>
-				<th>Total time</th>
-				<td>@(Model.TotalTime.ToString("g"))</td>
+				<th>&gt; @(Model.ZoneBins.Bins[Model.ZoneBins.Bins.Length - 1])</th>
+				<td>@(Model.ZoneBins.Values[Model.ZoneBins.Bins.Length])</td>
+				<td>@((Model.ZoneBins.Values[Model.ZoneBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
 			</tr>
-		</tbody>
-	</table>
+		</table>
+		
+		<h2>Time spent in each pace range</h2>
+		
+		<table>
+			<tr>
+				<th>&lt; @(Model.PaceBins.Bins[0])</th>
+				<td>@(Model.PaceBins.Values[0])</td>
+				<td>@((Model.PaceBins.Values[0].TotalMilliseconds / totalTime).ToString("P0"))</td>
+			</tr>
+			@for (var i = 0; i < Model.PaceBins.Bins.Length - 1; i++) {
+				<tr>
+					<th>@(Model.PaceBins.Bins[i])...@(Model.PaceBins.Bins[i + 1])</th>
+					<td>@(Model.PaceBins.Values[i + 1])</td>
+					<td>@((Model.PaceBins.Values[i + 1].TotalMilliseconds / totalTime).ToString("P0"))</td>
+				</tr>
+			}
+			<tr>
+				<th>&gt; @(Model.PaceBins.Bins[Model.PaceBins.Bins.Length - 1])</th>
+				<td>@(Model.PaceBins.Values[Model.PaceBins.Bins.Length])</td>
+				<td>@((Model.PaceBins.Values[Model.PaceBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
+			</tr>
+		</table>
 
 	</body>
 </html>
