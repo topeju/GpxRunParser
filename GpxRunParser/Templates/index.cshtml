@@ -1,0 +1,22 @@
+﻿@model GpxRunParser.RunStats
+<html>
+	<head>
+		<title></title>
+	</head>
+	<body>
+
+	<table>
+		<tbody>
+			<tr>
+				<th>Total distance</th>
+				<td>@(Model.TotalDistanceInKm) km</td>
+			</tr>
+			<tr>
+				<th>Total time</th>
+				<td>@(Model.TotalTime.ToString("g"))</td>
+			</tr>
+		</tbody>
+	</table>
+
+	</body>
+</html>
