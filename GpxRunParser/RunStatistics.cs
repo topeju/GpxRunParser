@@ -1,7 +1,7 @@
 using System;
 using GpxRunParser;
 
-public class RunStats
+public class RunStatistics
 {
 	public double TotalDistance { get; private set; }
 
@@ -48,7 +48,7 @@ public class RunStats
 	public TimeBin<double> ZoneBins { get; private set; }
 	public TimeBin<TimeSpan> PaceBins { get; private set; }
 
-	public RunStats(double[] zones, TimeSpan[] paces)
+	public RunStatistics(double[] zones, TimeSpan[] paces)
 	{
 		ZoneBins = new TimeBin<double>(zones);
 		PaceBins = new TimeBin<TimeSpan>(paces);

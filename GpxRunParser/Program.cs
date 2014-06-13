@@ -50,34 +50,9 @@ namespace GpxRunParser
 				(from paceStr in paceBinStr.Split(',')
 				 select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1]))).ToArray();
 
-			var gpxNamespace = XNamespace.Get("http://www.topografix.com/GPX/1/1");
-			var gpxDoc = XDocument.Load(fileName);
+			RunAnalyzer analyzer = new RunAnalyzer(zones, paces);
 
-			var runStats = new RunStats(zones, paces);
-			var firstPoint = true;
-
-			foreach (var track in gpxDoc.Descendants(gpxNamespace + "trk")) {
-				foreach (var segment in track.Descendants(gpxNamespace + "trkseg")) {
-					var points = from point in segment.Descendants(gpxNamespace + "trkpt")
-								 select new GpxTrackPoint(point);
-					var iterator = points.GetEnumerator();
-					if (iterator.MoveNext()) {
-						var p0 = iterator.Current;
-						runStats.UpdateMaxHeartRate(p0.HeartRate);
-						if (firstPoint) {
-							runStats.StartTime = p0.Time;
-							firstPoint = false;
-						}
-						while (iterator.MoveNext()) {
-							var pt = iterator.Current;
-							var dist = p0.DistanceTo(pt);
-							var deltaT = p0.TimeDifference(pt);
-							runStats.RecordInterval(deltaT, dist, pt.HeartRate, pt.Cadence);
-							p0 = pt;
-						}
-					}
-				}
-			}
+			var runStats = analyzer.Analyze(fileName);
 
 			var extRegexp = new Regex(@"\.gpx$", RegexOptions.IgnoreCase);
 			var outputFileName = extRegexp.Replace(fileName, ".html");
