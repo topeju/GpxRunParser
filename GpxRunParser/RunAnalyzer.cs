@@ -10,15 +10,15 @@ namespace GpxRunParser
 		private double[] _heartRateZones;
 		private TimeSpan[] _paceZones;
 
-		private Dictionary<DateTime,RunStatistics> _weeklyStats;
-		private Dictionary<DateTime,RunStatistics> _monthlyStats;
+		public IDictionary<DateTime,RunStatistics> WeeklyStats { get; private set; }
+		public IDictionary<DateTime,RunStatistics> MonthlyStats { get; private set; }
 
 		public RunAnalyzer(double[] heartRateZones, TimeSpan[] paceZones)
 		{
 			_heartRateZones = heartRateZones;
 			_paceZones = paceZones;
-			_weeklyStats = new Dictionary<DateTime, RunStatistics>();
-			_monthlyStats = new Dictionary<DateTime, RunStatistics>();
+			WeeklyStats = new Dictionary<DateTime, RunStatistics>();
+			MonthlyStats = new Dictionary<DateTime, RunStatistics>();
 		}
 
 		public RunStatistics Analyze(string fileName)
@@ -40,10 +40,10 @@ namespace GpxRunParser
 						var p0 = iterator.Current;
 						if (firstPoint) {
 							var month = new DateTime(p0.Time.Year, p0.Time.Month, 1);
-							if (_monthlyStats.ContainsKey(month)) {
-								monthlyStats = _monthlyStats[month];
+							if (MonthlyStats.ContainsKey(month)) {
+								monthlyStats = MonthlyStats[month];
 							} else {
-								_monthlyStats[month] = monthlyStats = new RunStatistics(_heartRateZones, _paceZones);
+								MonthlyStats[month] = monthlyStats = new RunStatistics(_heartRateZones, _paceZones);
 								monthlyStats.StartTime = month;
 							}
 							int deltaDays = DayOfWeek.Monday - p0.Time.DayOfWeek;
@@ -51,13 +51,16 @@ namespace GpxRunParser
 								deltaDays -= 7;
 							}
 							var week = p0.Time.Date.AddDays(deltaDays);
-							if (_weeklyStats.ContainsKey(week)) {
-								weeklyStats = _weeklyStats[week];
+							if (WeeklyStats.ContainsKey(week)) {
+								weeklyStats = WeeklyStats[week];
 							} else {
-								_weeklyStats[week] = weeklyStats = new RunStatistics(_heartRateZones, _paceZones);
+								WeeklyStats[week] = weeklyStats = new RunStatistics(_heartRateZones, _paceZones);
 								weeklyStats.StartTime = week;
 							}
 							runStats.StartTime = p0.Time;
+							runStats.Runs++;
+							monthlyStats.Runs++;
+							weeklyStats.Runs++;
 							firstPoint = false;
 						}
 						runStats.UpdateMaxHeartRate(p0.HeartRate);

@@ -48,6 +48,8 @@ public class RunStatistics
 	public TimeBin<double> ZoneBins { get; private set; }
 	public TimeBin<TimeSpan> PaceBins { get; private set; }
 
+	public int Runs { get; set; }
+
 	public RunStatistics(double[] zones, TimeSpan[] paces)
 	{
 		ZoneBins = new TimeBin<double>(zones);
@@ -57,6 +59,7 @@ public class RunStatistics
 		TotalHeartbeats = 0.0D;
 		MaxHeartRate = 0.0D;
 		TotalSteps = 0.0D;
+		Runs = 0;
 	}
 
 	public void RecordInterval(TimeSpan duration, double distance, double heartRate, double cadence)

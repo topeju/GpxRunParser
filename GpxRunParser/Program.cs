@@ -27,8 +27,7 @@ namespace GpxRunParser
 			};
 			try {
 				opts.Parse(args);
-			}
-			catch (OptionException e) {
+			} catch (OptionException e) {
 				Console.Error.Write("GpxRunParser: ");
 				Console.Error.WriteLine(e.Message);
 				Console.Error.WriteLine("Try GpxRunParser --help for more information");
@@ -45,7 +44,7 @@ namespace GpxRunParser
 				return;
 			}
 			var zones = (from zone in zoneStr.Split(',')
-						 select double.Parse(zone, CultureInfo.InvariantCulture)).ToArray();
+			             select double.Parse(zone, CultureInfo.InvariantCulture)).ToArray();
 			var paces =
 				(from paceStr in paceBinStr.Split(',')
 				 select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1]))).ToArray();
@@ -55,7 +54,7 @@ namespace GpxRunParser
 			var assembly = Assembly.GetExecutingAssembly();
 			var pageTemplate = "";
 
-			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.index.cshtml"))
+			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.IndividualRun.cshtml"))
 			using (var reader = new StreamReader(stream))
 				pageTemplate = reader.ReadToEnd();
 
@@ -66,9 +65,32 @@ namespace GpxRunParser
 				var runStats = analyzer.Analyze(fileName);
 
 				var outputFileName = extRegexp.Replace(fileName, ".html");
-
 				var page = Razor.Parse(pageTemplate, runStats);
+				using (var output = File.CreateText(outputFileName))
+					output.Write(page);
+			}
 
+			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.MonthlyStatistics.cshtml"))
+			using (var reader = new StreamReader(stream))
+				pageTemplate = reader.ReadToEnd();
+
+			foreach (var month in analyzer.MonthlyStats.Keys) {
+				var outputFileName = String.Format("Monthly-{0:yyyy-MM}.html", month);
+				var page = Razor.Parse(pageTemplate, analyzer.MonthlyStats[month]);
+				using (var output = File.CreateText(outputFileName))
+					output.Write(page);
+			}
+
+			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.WeeklyStatistics.cshtml"))
+			using (var reader = new StreamReader(stream))
+				pageTemplate = reader.ReadToEnd();
+
+			foreach (var week in analyzer.WeeklyStats.Keys) {
+				var calendar = CultureInfo.CurrentUICulture.Calendar;
+				var outputFileName = String.Format("Weekly-{0:yyyy}-{1:D2}.html", 
+					                     week, 
+					                     calendar.GetWeekOfYear(week, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday));
+				var page = Razor.Parse(pageTemplate, analyzer.WeeklyStats[week]);
 				using (var output = File.CreateText(outputFileName))
 					output.Write(page);
 			}

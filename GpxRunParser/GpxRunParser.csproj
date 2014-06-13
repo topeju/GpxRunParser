@@ -72,6 +72,8 @@
   -->
   <ItemGroup />
   <ItemGroup>
-    <EmbeddedResource Include="Templates\index.cshtml" />
+    <EmbeddedResource Include="Templates\IndividualRun.cshtml" />
+    <EmbeddedResource Include="Templates\MonthlyStatistics.cshtml" />
+    <EmbeddedResource Include="Templates\WeeklyStatistics.cshtml" />
   </ItemGroup>
 </Project>
