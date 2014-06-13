@@ -15,12 +15,12 @@ namespace GpxRunParser
 	{
 		private static void Main(string[] args)
 		{
-			var fileName = "";
+			var dirName = "";
 			var zoneStr = "120,140,173,182";
 			var paceBinStr = "8:45,7:15,6:10";
 			var help = false;
 			var opts = new OptionSet {
-				{ "f|file=", "GPX file to parse", s => fileName = s },
+				{ "d|dir=", "Directory with GPX files to parse", s => dirName = s },
 				{ "z|zones=", "Heart rate zone limits, comma-separated", s => zoneStr = s },
 				{ "p|paces=", "Pace bin limits, comma-separated mm:ss", s => paceBinStr = s },
 				{ "h|?|help", "Show this help text", s => help = s != null }
@@ -36,12 +36,12 @@ namespace GpxRunParser
 			}
 			if (help) {
 				Console.Out.WriteLine("Usage: GpxRunParser [OPTIONS]+");
-				Console.Out.WriteLine("Parses the GPX file specified using the -f option to calculate statistics on the file.");
+				Console.Out.WriteLine("Parses the GPX files in the directory specified using the -d option to calculate statistics on the files.");
 				opts.WriteOptionDescriptions(Console.Out);
 				return;
 			}
-			if (fileName == "") {
-				Console.Error.WriteLine("Input GPX file not specified");
+			if (dirName == "") {
+				Console.Error.WriteLine("Input directory not specified");
 				return;
 			}
 			var zones = (from zone in zoneStr.Split(',')
@@ -50,22 +50,28 @@ namespace GpxRunParser
 				(from paceStr in paceBinStr.Split(',')
 				 select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1]))).ToArray();
 
-			RunAnalyzer analyzer = new RunAnalyzer(zones, paces);
-
-			var runStats = analyzer.Analyze(fileName);
-
-			var extRegexp = new Regex(@"\.gpx$", RegexOptions.IgnoreCase);
-			var outputFileName = extRegexp.Replace(fileName, ".html");
+			var analyzer = new RunAnalyzer(zones, paces);
 
 			var assembly = Assembly.GetExecutingAssembly();
 			var pageTemplate = "";
 
 			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.index.cshtml"))
-			using (var reader = new StreamReader(stream)) pageTemplate = reader.ReadToEnd();
+			using (var reader = new StreamReader(stream))
+				pageTemplate = reader.ReadToEnd();
 
-			var page = Razor.Parse(pageTemplate, runStats);
+			var extRegexp = new Regex(@"\.gpx$", RegexOptions.IgnoreCase);
+			var gpxFiles = Directory.EnumerateFiles(dirName, "*.gpx");
 
-			using (var output = File.CreateText(outputFileName)) output.Write(page);
+			foreach (var fileName in gpxFiles) {
+				var runStats = analyzer.Analyze(fileName);
+
+				var outputFileName = extRegexp.Replace(fileName, ".html");
+
+				var page = Razor.Parse(pageTemplate, runStats);
+
+				using (var output = File.CreateText(outputFileName))
+					output.Write(page);
+			}
 		}
 	}
 
