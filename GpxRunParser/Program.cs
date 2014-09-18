@@ -16,11 +16,13 @@ namespace GpxRunParser
 		private static void Main(string[] args)
 		{
 			var dirName = "";
+			var filePattern = "*.gpx";
 			var zoneStr = "120,140,173,182";
 			var paceBinStr = "8:45,7:15,6:10";
 			var help = false;
 			var opts = new OptionSet {
 				{ "d|dir=", "Directory with GPX files to parse", s => dirName = s },
+				{ "f|files=", "File name pattern to match, default is *.gpx", s => filePattern = s },
 				{ "z|zones=", "Heart rate zone limits, comma-separated", s => zoneStr = s },
 				{ "p|paces=", "Pace bin limits, comma-separated mm:ss", s => paceBinStr = s },
 				{ "h|?|help", "Show this help text", s => help = s != null }
@@ -59,7 +61,7 @@ namespace GpxRunParser
 				pageTemplate = reader.ReadToEnd();
 
 			var extRegexp = new Regex(@"\.gpx$", RegexOptions.IgnoreCase);
-			var gpxFiles = Directory.EnumerateFiles(dirName, "*.gpx");
+			var gpxFiles = Directory.EnumerateFiles(dirName, filePattern);
 
 			foreach (var fileName in gpxFiles) {
 				var runStats = analyzer.Analyze(fileName);
