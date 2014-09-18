@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using GpxRunParser;
 
 public class RunStatistics
@@ -50,6 +52,8 @@ public class RunStatistics
 
 	public int Runs { get; set; }
 
+	public IDictionary<DateTime, double> HeartRateLog { get; set; }
+
 	public RunStatistics(double[] zones, TimeSpan[] paces)
 	{
 		ZoneBins = new TimeBin<double>(zones);
@@ -60,10 +64,12 @@ public class RunStatistics
 		MaxHeartRate = 0.0D;
 		TotalSteps = 0.0D;
 		Runs = 0;
+		HeartRateLog = new SortedDictionary<DateTime, double>();
 	}
 
 	public void RecordInterval(TimeSpan duration, double distance, double heartRate, double cadence)
 	{
+		HeartRateLog[StartTime + TotalTime] = heartRate;
 		TotalTime += duration;
 		TotalDistance += distance;
 		ZoneBins.Record(heartRate, duration);

@@ -64,10 +64,17 @@ namespace GpxRunParser
 			foreach (var fileName in gpxFiles) {
 				var runStats = analyzer.Analyze(fileName);
 
-				var outputFileName = extRegexp.Replace(fileName, ".html");
-				var page = Razor.Parse(pageTemplate, runStats);
+				var baseFileName = extRegexp.Replace(fileName, "");
+				var outputFileName = baseFileName + ".html";
+				var viewBag = new DynamicViewBag();
+				viewBag.AddValue("FileName", baseFileName);
+				var page = Razor.Parse(pageTemplate, runStats, viewBag, null);
 				using (var output = File.CreateText(outputFileName))
 					output.Write(page);
+
+				var hrChart = new HeartRateChart(baseFileName, runStats);
+				hrChart.Draw();
+				hrChart.SavePng();
 			}
 
 			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.MonthlyStatistics.cshtml"))

@@ -77,25 +77,31 @@
 		
 		<h2>Time spent in each pace range</h2>
 		
-		<table>
-			<tr>
-				<th>&lt; @(Model.PaceBins.Bins[0])</th>
-				<td>@(Model.PaceBins.Values[0])</td>
-				<td>@((Model.PaceBins.Values[0].TotalMilliseconds / totalTime).ToString("P0"))</td>
-			</tr>
-			@for (var i = 0; i < Model.PaceBins.Bins.Length - 1; i++) {
-				<tr>
-					<th>@(Model.PaceBins.Bins[i])...@(Model.PaceBins.Bins[i + 1])</th>
-					<td>@(Model.PaceBins.Values[i + 1])</td>
-					<td>@((Model.PaceBins.Values[i + 1].TotalMilliseconds / totalTime).ToString("P0"))</td>
-				</tr>
-			}
-			<tr>
-				<th>&gt; @(Model.PaceBins.Bins[Model.PaceBins.Bins.Length - 1])</th>
-				<td>@(Model.PaceBins.Values[Model.PaceBins.Bins.Length])</td>
-				<td>@((Model.PaceBins.Values[Model.PaceBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
-			</tr>
-		</table>
+	    <table>
+	        <tr>
+	            <th>&lt; @(Model.PaceBins.Bins[0])</th>
+	            <td>@(Model.PaceBins.Values[0])</td>
+	            <td>@((Model.PaceBins.Values[0].TotalMilliseconds / totalTime).ToString("P0"))</td>
+	        </tr>
+	        @for (var i = 0; i < Model.PaceBins.Bins.Length - 1; i++) {
+		        <tr>
+		            <th>@(Model.PaceBins.Bins[i])...@(Model.PaceBins.Bins[i + 1])</th>
+		            <td>@(Model.PaceBins.Values[i + 1])</td>
+		            <td>@((Model.PaceBins.Values[i + 1].TotalMilliseconds / totalTime).ToString("P0"))</td>
+		        </tr>
+	        }
+	        <tr>
+	            <th>&gt; @(Model.PaceBins.Bins[Model.PaceBins.Bins.Length - 1])</th>
+	            <td>@(Model.PaceBins.Values[Model.PaceBins.Bins.Length])</td>
+	            <td>@((Model.PaceBins.Values[Model.PaceBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
+	        </tr>
+	    </table>
+
+	    <h2>Charts</h2>
+        
+	    <h3>Heart Rate</h3>
+
+        <img src="@(ViewBag.FileName)_hr.png" />
 
 	</body>
 </html>
