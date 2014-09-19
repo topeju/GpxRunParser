@@ -77,8 +77,10 @@ public class RunStatistics
 		ZoneBins.Record(heartRate, duration);
 		var pace = new TimeSpan((long) (1000.0D * duration.Ticks / distance));
 		PaceBins.Record(pace, duration);
-		if (pace < slowestDisplayedPace) {
+		if (distance > 0.0 && pace < slowestDisplayedPace) {
 			PaceLog[StartTime + TotalTime] = pace;
+		} else {
+			PaceLog[StartTime + TotalTime] = new TimeSpan(0);
 		}
 		TotalHeartbeats += heartRate * duration.TotalMinutes;
 		UpdateMaxHeartRate(heartRate);
