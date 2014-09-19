@@ -77,6 +77,10 @@ namespace GpxRunParser
 				var hrChart = new HeartRateChart(baseFileName, runStats);
 				hrChart.Draw();
 				hrChart.SavePng();
+
+				var paceChart = new PaceChart(baseFileName, runStats);
+				paceChart.Draw();
+				paceChart.SavePng();
 			}
 
 			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.MonthlyStatistics.cshtml"))

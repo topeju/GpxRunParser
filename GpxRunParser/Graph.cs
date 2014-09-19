@@ -54,6 +54,9 @@ namespace GpxRunParser
 
 		public override void Draw()
 		{
+			if (!_stats.HeartRateLog.Any()) {
+				return;
+			}
 			var series = new LineSeries();
 			series.Title = "Heart Rate";
 			series.Color = OxyColors.Red;
@@ -71,6 +74,48 @@ namespace GpxRunParser
 			}
 			yAxis.Minimum = minHr;
 			yAxis.Maximum = maxHr;
+			_chart.Axes.Add(yAxis);
+			_chart.Series.Add(series);
+		}
+	}
+
+	public class PaceChart : GraphBase
+	{
+		public PaceChart(string baseFileName, RunStatistics stats)
+			: base(baseFileName + "_pace", stats)
+		{
+		}
+
+		private readonly TimeSpan slowestDisplayedPace = new TimeSpan(0, 20, 0);
+
+		public override void Draw()
+		{
+			if (!_stats.PaceLog.Any()) {
+				return;
+			}
+			var series = new LineSeries();
+			series.Title = "Pace";
+			series.Color = OxyColors.Blue;
+			series.Smooth = true;
+			var yAxis = new TimeSpanAxis();
+			yAxis.Position = AxisPosition.Left;
+			var slowestPace = TimeSpan.MinValue;
+			var fastestPace = TimeSpan.MaxValue;
+			foreach (var time in _stats.PaceLog.Keys) {
+				var pace = _stats.PaceLog[time];
+				if (pace < slowestDisplayedPace) {
+					series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), TimeSpanAxis.ToDouble(pace)));
+					if (pace > slowestPace)
+						slowestPace = pace;
+					if (pace < fastestPace)
+						fastestPace = pace;
+				}
+			}
+			if (slowestPace > slowestDisplayedPace) {
+				slowestPace = slowestDisplayedPace;
+			}
+			yAxis.Minimum = TimeSpanAxis.ToDouble(fastestPace);
+			yAxis.Maximum = TimeSpanAxis.ToDouble(slowestPace);
 			_chart.Axes.Add(yAxis);
 			_chart.Series.Add(series);
 		}

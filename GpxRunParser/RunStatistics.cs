@@ -53,6 +53,7 @@ public class RunStatistics
 	public int Runs { get; set; }
 
 	public IDictionary<DateTime, double> HeartRateLog { get; set; }
+	public IDictionary<DateTime, TimeSpan> PaceLog { get; set; }
 
 	public RunStatistics(double[] zones, TimeSpan[] paces)
 	{
@@ -65,20 +66,26 @@ public class RunStatistics
 		TotalSteps = 0.0D;
 		Runs = 0;
 		HeartRateLog = new SortedDictionary<DateTime, double>();
+		PaceLog = new SortedDictionary<DateTime, TimeSpan>();
 	}
+
+	private readonly TimeSpan slowestDisplayedPace = new TimeSpan(0, 20, 0);
 
 	public void RecordInterval(TimeSpan duration, double distance, double heartRate, double cadence)
 	{
 		HeartRateLog[StartTime + TotalTime] = heartRate;
-		TotalTime += duration;
-		TotalDistance += distance;
 		ZoneBins.Record(heartRate, duration);
 		var pace = new TimeSpan((long) (1000.0D * duration.Ticks / distance));
 		PaceBins.Record(pace, duration);
+		if (pace < slowestDisplayedPace) {
+			PaceLog[StartTime + TotalTime] = pace;
+		}
 		TotalHeartbeats += heartRate * duration.TotalMinutes;
 		UpdateMaxHeartRate(heartRate);
 		// Cadence is number of full cycles per minute by the pair of feet, thus there are two steps per cadence per minute?
 		TotalSteps += 2.0D * cadence * duration.TotalMinutes;
+		TotalDistance += distance;
+		TotalTime += duration;
 	}
 
 	public void UpdateMaxHeartRate(double heartRate)
