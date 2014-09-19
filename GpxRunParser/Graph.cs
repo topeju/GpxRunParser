@@ -5,14 +5,18 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms.DataVisualization.Charting;
+using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
+using OxyPlot.WindowsForms;
+using System.IO;
 
 namespace GpxRunParser
 {
 	public abstract class GraphBase
 	{
-		protected Chart _chart;
-		protected ChartArea _chartArea;
+		protected PlotModel _chart;
+		protected Axis _xAxis;
 		protected string _baseFileName;
 		protected RunStatistics _stats;
 
@@ -21,25 +25,22 @@ namespace GpxRunParser
 			_baseFileName = baseBaseFileName;
 			_stats = stats;
 
-			_chart = new Chart();
+			_chart = new PlotModel();
 
-			_chart.Size = new Size(600, 300);
-
-			_chartArea = new ChartArea();
-			_chartArea.AxisX.LabelStyle.Format = "HH:mm";
-			_chartArea.AxisX.MajorGrid.LineColor = Color.LightGray;
-			_chartArea.AxisY.MajorGrid.LineColor = Color.LightGray;
-			_chartArea.AxisX.LabelStyle.Font = new Font(FontFamily.GenericSansSerif, 8);
-			_chartArea.AxisY.LabelStyle.Font = new Font(FontFamily.GenericSansSerif, 8);
-			_chart.ChartAreas.Add(_chartArea);
+			_xAxis = new DateTimeAxis();
+			_xAxis.Position = AxisPosition.Bottom;
+			_xAxis.Minimum = DateTimeAxis.ToDouble(_stats.StartTime);
+			_xAxis.Maximum = DateTimeAxis.ToDouble(_stats.StartTime + _stats.TotalTime);
+			_xAxis.StringFormat = "HH:mm";
+			_chart.Axes.Add(_xAxis);
+			_chart.LegendPosition = LegendPosition.BottomRight;
 		}
 
 		public abstract void Draw();
 
 		public void SavePng()
 		{
-			_chart.Invalidate();
-			_chart.SaveImage(_baseFileName + ".png", ChartImageFormat.Png);
+			PngExporter.Export(_chart, _baseFileName + ".png", 600, 300, Brushes.White);
 		}
 
 	}
@@ -53,24 +54,24 @@ namespace GpxRunParser
 
 		public override void Draw()
 		{
-			var series = new Series();
-			series.Name = "Heart Rate";
-			series.ChartType = SeriesChartType.Line;
-			series.XAxisType = AxisType.Primary;
-			series.XValueType = ChartValueType.DateTime;
+			var series = new LineSeries();
+			series.Title = "Heart Rate";
+			series.Color = OxyColors.Red;
+			var yAxis = new LinearAxis();
+			yAxis.Position = AxisPosition.Left;
 			double minHr = double.MaxValue;
 			double maxHr = double.MinValue;
 			foreach (var time in _stats.HeartRateLog.Keys) {
 				var hr = _stats.HeartRateLog[time];
-				series.Points.AddXY(time, hr);
+				series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), hr));
 				if (hr < minHr)
 					minHr = hr;
 				if (hr > maxHr)
 					maxHr = hr;
 			}
-			_chartArea.AxisY.Crossing = Double.MinValue;
-			_chartArea.AxisY.Minimum = minHr;
-			_chartArea.AxisY.Maximum = maxHr;
+			yAxis.Minimum = minHr;
+			yAxis.Maximum = maxHr;
+			_chart.Axes.Add(yAxis);
 			_chart.Series.Add(series);
 		}
 	}
