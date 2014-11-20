@@ -86,7 +86,7 @@ namespace GpxRunParser
 		{
 		}
 
-		private readonly TimeSpan slowestDisplayedPace = new TimeSpan(0, 20, 0);
+		private readonly TimeSpan slowestDisplayedPace = new TimeSpan(0, 12, 0);
 
 		public override void Draw()
 		{
