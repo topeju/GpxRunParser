@@ -40,6 +40,17 @@ namespace GpxRunParser
 			}
 		}
 
+		public GpxTrackPoint(GpxTrackPoint point)
+			: this()
+		{
+			Latitude = point.Latitude;
+			Longitude = point.Longitude;
+			Elevation = point.Elevation;
+			Time = point.Time;
+			HeartRate = point.HeartRate;
+			Cadence = point.Cadence;
+		}
+
 		public double DistanceTo(GpxTrackPoint otherPoint)
 		{
 			const double equatorialRadius = 6378137.0D; // m
@@ -56,6 +67,11 @@ namespace GpxRunParser
 		public TimeSpan TimeDifference(GpxTrackPoint otherPoint)
 		{
 			return otherPoint.Time - this.Time;
+		}
+
+		public override string ToString()
+		{
+			return string.Format("[GpxTrackPoint: Latitude={0}, Longitude={1}, Elevation={2}, Time={3}, HeartRate={4}, Cadence={5}]", Latitude, Longitude, Elevation, Time, HeartRate, Cadence);
 		}
 	}
 }

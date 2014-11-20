@@ -38,42 +38,44 @@ namespace GpxRunParser
 					var iterator = points.GetEnumerator();
 					if (iterator.MoveNext()) {
 						var p0 = iterator.Current;
+						var trackFilter = new KalmanFilter(1.0);
+						trackFilter.Process(p0, 1.0);
 						if (firstPoint) {
-							var month = new DateTime(p0.Time.Year, p0.Time.Month, 1);
+							var month = new DateTime(trackFilter.Point.Time.Year, trackFilter.Point.Time.Month, 1);
 							if (MonthlyStats.ContainsKey(month)) {
 								monthlyStats = MonthlyStats[month];
 							} else {
 								MonthlyStats[month] = monthlyStats = new RunStatistics(_heartRateZones, _paceZones);
 								monthlyStats.StartTime = month;
 							}
-							int deltaDays = DayOfWeek.Monday - p0.Time.DayOfWeek;
+							int deltaDays = DayOfWeek.Monday - trackFilter.Point.Time.DayOfWeek;
 							if (deltaDays > 0) {
 								deltaDays -= 7;
 							}
-							var week = p0.Time.Date.AddDays(deltaDays);
+							var week = trackFilter.Point.Time.Date.AddDays(deltaDays);
 							if (WeeklyStats.ContainsKey(week)) {
 								weeklyStats = WeeklyStats[week];
 							} else {
 								WeeklyStats[week] = weeklyStats = new RunStatistics(_heartRateZones, _paceZones);
 								weeklyStats.StartTime = week;
 							}
-							runStats.StartTime = p0.Time;
+							runStats.StartTime = trackFilter.Point.Time;
 							runStats.Runs++;
 							monthlyStats.Runs++;
 							weeklyStats.Runs++;
 							firstPoint = false;
 						}
-						runStats.UpdateMaxHeartRate(p0.HeartRate);
-						monthlyStats.UpdateMaxHeartRate(p0.HeartRate);
-						weeklyStats.UpdateMaxHeartRate(p0.HeartRate);
+						runStats.UpdateMaxHeartRate(trackFilter.Point.HeartRate);
+						monthlyStats.UpdateMaxHeartRate(trackFilter.Point.HeartRate);
+						weeklyStats.UpdateMaxHeartRate(trackFilter.Point.HeartRate);
 						while (iterator.MoveNext()) {
-							var pt = iterator.Current;
-							var dist = p0.DistanceTo(pt);
-							var deltaT = p0.TimeDifference(pt);
-							runStats.RecordInterval(deltaT, dist, pt.HeartRate, pt.Cadence);
-							monthlyStats.RecordInterval(deltaT, dist, pt.HeartRate, pt.Cadence);
-							weeklyStats.RecordInterval(deltaT, dist, pt.HeartRate, pt.Cadence);
-							p0 = pt;
+							var previousPoint = new GpxTrackPoint(trackFilter.Point);
+							trackFilter.Process(iterator.Current, 1.0);
+							var dist = previousPoint.DistanceTo(trackFilter.Point);
+							var deltaT = previousPoint.TimeDifference(trackFilter.Point);
+							runStats.RecordInterval(deltaT, dist, trackFilter.Point.HeartRate, trackFilter.Point.Cadence);
+							monthlyStats.RecordInterval(deltaT, dist, trackFilter.Point.HeartRate, trackFilter.Point.Cadence);
+							weeklyStats.RecordInterval(deltaT, dist, trackFilter.Point.HeartRate, trackFilter.Point.Cadence);
 						}
 					}
 				}
