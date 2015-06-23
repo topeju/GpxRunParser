@@ -27,23 +27,52 @@ namespace GpxRunParser
 
 			_chart = new PlotModel();
 
-			_xAxis = new DateTimeAxis();
-			_xAxis.Position = AxisPosition.Bottom;
-			_xAxis.Minimum = DateTimeAxis.ToDouble(_stats.StartTime);
-			_xAxis.Maximum = DateTimeAxis.ToDouble(_stats.StartTime + _stats.TotalTime);
-			_xAxis.StringFormat = "HH:mm";
-			_xAxis.ExtraGridlineStyle = LineStyle.Dash;
-			_xAxis.ExtraGridlineColor = OxyColors.Green;
-			_xAxis.ExtraGridlineThickness = 1.0;
-			_xAxis.ExtraGridlines = stats.StartPoints.Select(DateTimeAxis.ToDouble).ToArray();
+			_xAxis = new DateTimeAxis {
+				Position = AxisPosition.Bottom,
+				Minimum = DateTimeAxis.ToDouble(_stats.StartTime),
+				Maximum = DateTimeAxis.ToDouble(_stats.StartTime + _stats.TotalTime),
+				StringFormat = "HH:mm"
+			};
 			_chart.Axes.Add(_xAxis);
 			_chart.LegendPosition = LegendPosition.BottomRight;
 		}
 
 		public abstract void Draw();
 
+		private void AddPauseSeries()
+		{
+			var pauseSeries = new AreaSeries { Title = "Paused", Color = OxyColors.DimGray, LineStyle = LineStyle.None, YAxisKey = "Secondary" };
+			var secondYAxis = new LinearAxis { Position = AxisPosition.Right, Minimum = 0.0, Maximum = 1.0, Key = "Secondary", IsAxisVisible = false };
+			var startPointIndex = 0;
+			var endPointIndex = 0;
+			var paused = false;
+			var numStartPoints = _stats.StartPoints.Count;
+			var numEndPoints = _stats.EndPoints.Count;
+			while (startPointIndex < numStartPoints && endPointIndex < numEndPoints) {
+				if (_stats.StartPoints[startPointIndex] > _stats.EndPoints[endPointIndex]) {
+					if (!paused) {
+						pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.EndPoints[endPointIndex]), 0.0));
+						pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.EndPoints[endPointIndex]), 1.0));
+					}
+					endPointIndex++;
+					paused = true;
+				}
+				if (endPointIndex >= numEndPoints || _stats.StartPoints[startPointIndex] < _stats.EndPoints[endPointIndex]) {
+					if (paused) {
+						pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.StartPoints[startPointIndex]), 1.0));
+						pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.StartPoints[startPointIndex]), 0.0));
+					}
+					startPointIndex++;
+					paused = false;
+				}
+			}
+			_chart.Axes.Add(secondYAxis);
+			_chart.Series.Add(pauseSeries);
+		}
+
 		public void SavePng()
 		{
+			AddPauseSeries(); // Needs to be added last so it shows up in the background
 			PngExporter.Export(_chart, _baseFileName + ".png", 900, 500, Brushes.White);
 		}
 
@@ -101,12 +130,19 @@ namespace GpxRunParser
 			if (!_stats.PaceLog.Any()) {
 				return;
 			}
-			var series = new LineSeries();
-			series.Title = "Pace";
-			series.Color = OxyColors.Blue;
-			series.Smooth = true;
-			var yAxis = new TimeSpanAxis();
-			yAxis.Position = AxisPosition.Left;
+			var series = new LineSeries { Title = "Pace", Color = OxyColors.Blue };
+			var yAxis = new TimeSpanAxis {
+				Position = AxisPosition.Left,
+				Key = "Primary",
+				MajorGridlineStyle = LineStyle.Solid,
+				MajorGridlineThickness = 1.0,
+				MinorGridlineStyle = LineStyle.Dot,
+				MinorGridlineThickness = 1.0,
+				MajorStep = TimeSpanAxis.ToDouble(TimeSpan.FromMinutes(1)),
+				MinorStep = TimeSpanAxis.ToDouble(TimeSpan.FromSeconds(30)),
+				StartPosition = 1,
+				EndPosition = 0
+			};
 			var slowestPace = TimeSpan.MinValue;
 			var fastestPace = TimeSpan.MaxValue;
 			foreach (var time in _stats.PaceLog.Keys) {
@@ -124,10 +160,6 @@ namespace GpxRunParser
 			}
 			yAxis.Minimum = TimeSpanAxis.ToDouble(fastestPace);
 			yAxis.Maximum = TimeSpanAxis.ToDouble(slowestPace);
-			yAxis.MajorGridlineStyle = LineStyle.Solid;
-			yAxis.MajorGridlineThickness = 1.0;
-			yAxis.MinorGridlineStyle = LineStyle.Dot;
-			yAxis.MinorGridlineThickness = 1.0;
 			_chart.Axes.Add(yAxis);
 			_chart.Series.Add(series);
 		}

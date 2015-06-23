@@ -47,6 +47,7 @@ public class RunStatistics
 	}
 
 	public DateTime StartTime { get; set; }
+	public DateTime EndTime { get; set; }
 
 	public TimeBin<double> ZoneBins { get; private set; }
 	public TimeBin<TimeSpan> PaceBins { get; private set; }
@@ -56,9 +57,20 @@ public class RunStatistics
 	public IDictionary<DateTime, double> HeartRateLog { get; set; }
 	public IDictionary<DateTime, TimeSpan> PaceLog { get; set; }
 
+	public IList<DateTime> EndPoints { get; set; }
 	public IList<DateTime> StartPoints { get; set; }
 
-	private SortedDictionary<DateTime, GpxTrackPoint> LastPoints { get; set; }
+	private struct PointIntervalData
+	{
+		public double distance;
+		public TimeSpan interval;
+	}
+
+	private GpxTrackPoint _lastPoint;
+	private readonly PointIntervalData[] _lastIntervals = new PointIntervalData[AveragingPeriod];
+	private int _latestPointOffset = -1;
+	private int _earliestPointOffset = -1;
+	private int _bufferCount = 0;
 
 	public RunStatistics(double[] zones, TimeSpan[] paces)
 	{
@@ -72,67 +84,86 @@ public class RunStatistics
 		Runs = 0;
 		HeartRateLog = new SortedDictionary<DateTime, double>();
 		PaceLog = new SortedDictionary<DateTime, TimeSpan>();
-		LastPoints = new SortedDictionary<DateTime, GpxTrackPoint>();
 		StartPoints = new List<DateTime>();
+		EndPoints = new List<DateTime>();
+		_lastPoint = null;
 	}
 
-	private static readonly TimeSpan AveragingPeriod = new TimeSpan(0, 0, 15);
+	private const int AveragingPeriod = 15; // Seconds. Also, number of point distance values stored (-1).
 	private static readonly TimeSpan SlowestDisplayedPace = new TimeSpan(0, 20, 0);
 
 	public void SetStartPoint(GpxTrackPoint point)
 	{
-		LastPoints = new SortedDictionary<DateTime, GpxTrackPoint>();
-		LastPoints[point.Time] = point;
+		_latestPointOffset = -1;
+		_earliestPointOffset = -1;
+		_bufferCount = 0;
+		if (_lastPoint != null) {
+			EndPoints.Add(_lastPoint.Time);
+		}
 		StartPoints.Add(point.Time);
 		UpdateMaxHeartRate(point.HeartRate);
+		_lastPoint = point;
 	}
 
 	public void RecordInterval(GpxTrackPoint point)
 	{
-		// FIXME: This is a silly way to do moving averages. Instead, store the distance and time values in a queue and add and drop them as needed. Summing them up then becomes just summing up the stored numbers, rather than calculating the distances all over again.
-		LastPoints[point.Time] = point;
-		foreach (var key in LastPoints.Keys.Where(k => k < point.Time - AveragingPeriod).ToList()) {
-			// Make sure at least two points remain so we can calculate the time and distance traveled:
-			if (LastPoints.Keys.Count <= 2) {
-				break;
+		// Sequence (AveragingPeriod=4):
+		// ___, ___, ___, ___ (latest = -1, earliest = -1)
+		// P01, ___, ___, ___ (latest = 0, earliest = 0)
+		// P01, P12, ___, ___ (latest = 1, earliest = 0)
+		// P01, P12, P23, ___ (latest = 2, earliest = 0)
+		// P01, P12, P23, P34 (latest = 3, earliest = 0)
+		// P45, P12, P23, P34 (latest = 0, earliest = 1)
+		// P45, P56, P23, P34 (latest = 1, earliest = 2)
+		// P45, P56, P67, P34 (latest = 2, earliest = 3)
+		// P45, P56, P67, P78 (latest = 3, earliest = 0)
+		// P89, P56, P67, P78 (latest = 0, earliest = 1)
+		_latestPointOffset++;
+		if (_bufferCount < AveragingPeriod) _bufferCount++;
+		if (_latestPointOffset >= AveragingPeriod) {
+			_latestPointOffset = 0;
+		}
+		if (_earliestPointOffset < 0) {
+			_earliestPointOffset = 0;
+		} else if (_latestPointOffset == _earliestPointOffset) {
+			_earliestPointOffset++;
+			if (_earliestPointOffset >= AveragingPeriod) {
+				_earliestPointOffset = 0;
 			}
-			LastPoints.Remove(key);
-			// TODO: What about time travel? (i.e. point.Time < highest Time in LastPoints) - may be rather theoretical.
 		}
 
-		var firstPoint = LastPoints.First().Value;
-		var lastPoint = point;
-		var lastLessOnePoint = LastPoints.Last(pt => pt.Key < point.Time).Value;
+		_lastIntervals[_latestPointOffset].distance = _lastPoint.DistanceTo(point);
+		_lastIntervals[_latestPointOffset].interval = _lastPoint.TimeDifference(point);
 
-		var dist = lastLessOnePoint.DistanceTo(lastPoint);
-		var deltaT = lastLessOnePoint.TimeDifference(lastPoint);
+		var dist = _lastPoint.DistanceTo(point);
+		var deltaT = _lastPoint.TimeDifference(point);
 
 		double averagedDistance = 0.0;
 		var averageTime = new TimeSpan(0);
-		var times = LastPoints.Keys.ToArray();
-		var prevPoint = firstPoint;
-		for (var i = 1; i < LastPoints.Count; i++) {
-			var t = times[i];
-			averagedDistance += prevPoint.DistanceTo(LastPoints[t]);
-			averageTime += prevPoint.TimeDifference(LastPoints[t]);
-			prevPoint = LastPoints[t];
+		for (var i = 0; i < _bufferCount; i++) {
+			averagedDistance += _lastIntervals[i].distance;
+			averageTime += _lastIntervals[i].interval;
 		}
 
-		HeartRateLog[StartTime + TotalTime] = lastPoint.HeartRate;
-		ZoneBins.Record(lastPoint.HeartRate, deltaT);
+		HeartRateLog[point.Time] = point.HeartRate;
+		ZoneBins.Record(point.HeartRate, deltaT);
 		var averagedPace = new TimeSpan((long) (1000.0D * averageTime.Ticks / averagedDistance));
 		PaceBins.Record(averagedPace, deltaT);
-		if (averagedDistance > 0.0 && averagedPace < SlowestDisplayedPace) {
-			PaceLog[StartTime + TotalTime] = averagedPace;
+		if (averagedDistance > 0.0/* && averagedPace < SlowestDisplayedPace*/) {
+			PaceLog[point.Time] = averagedPace;
 		} else {
-			PaceLog[StartTime + TotalTime] = new TimeSpan(0);
+			PaceLog[point.Time] = SlowestDisplayedPace; //new TimeSpan(0);
 		}
-		TotalHeartbeats += lastPoint.HeartRate * deltaT.TotalMinutes;
-		UpdateMaxHeartRate(lastPoint.HeartRate);
+		TotalHeartbeats += point.HeartRate * deltaT.TotalMinutes;
+		UpdateMaxHeartRate(point.HeartRate);
 		// Cadence is number of full cycles per minute by the pair of feet, thus there are two steps per cadence per minute?
-		TotalSteps += 2.0D * lastPoint.Cadence * deltaT.TotalMinutes;
+		TotalSteps += 2.0D * point.Cadence * deltaT.TotalMinutes;
 		TotalDistance += dist;
 		TotalTime += deltaT;
+
+		EndTime = point.Time > EndTime ? point.Time : EndTime;
+
+		_lastPoint = point;
 	}
 
 	public void UpdateMaxHeartRate(double heartRate)
