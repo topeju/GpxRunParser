@@ -45,17 +45,17 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Web.Razor">
-      <HintPath>..\packages\Microsoft.AspNet.Razor.3.0.0\lib\net45\System.Web.Razor.dll</HintPath>
-    </Reference>
     <Reference Include="RazorEngine">
       <HintPath>..\packages\RazorEngine.3.4.1\lib\net45\RazorEngine.dll</HintPath>
     </Reference>
     <Reference Include="OxyPlot">
-      <HintPath>..\packages\OxyPlot.Core.2014.1.474\lib\portable-net4+sl4+wp71+win8\OxyPlot.dll</HintPath>
+      <HintPath>..\packages\OxyPlot.Core.2014.1.546\lib\portable-net4+sl4+wp71+win8\OxyPlot.dll</HintPath>
     </Reference>
     <Reference Include="OxyPlot.WindowsForms">
-      <HintPath>..\packages\OxyPlot.WindowsForms.2014.1.474\lib\net45\OxyPlot.WindowsForms.dll</HintPath>
+      <HintPath>..\packages\OxyPlot.WindowsForms.2014.1.546\lib\net45\OxyPlot.WindowsForms.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor">
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.2\lib\net45\System.Web.Razor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

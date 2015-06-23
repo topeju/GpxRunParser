@@ -40,7 +40,7 @@ namespace GpxRunParser
 
 		public void SavePng()
 		{
-			PngExporter.Export(_chart, _baseFileName + ".png", 600, 300, Brushes.White);
+			PngExporter.Export(_chart, _baseFileName + ".png", 900, 500, Brushes.White);
 		}
 
 	}
@@ -74,6 +74,10 @@ namespace GpxRunParser
 			}
 			yAxis.Minimum = minHr;
 			yAxis.Maximum = maxHr;
+			yAxis.MajorGridlineStyle = LineStyle.Solid;
+			yAxis.MajorGridlineThickness = 1.0;
+			yAxis.MinorGridlineStyle = LineStyle.Dot;
+			yAxis.MinorGridlineThickness = 1.0;
 			_chart.Axes.Add(yAxis);
 			_chart.Series.Add(series);
 		}
@@ -116,6 +120,10 @@ namespace GpxRunParser
 			}
 			yAxis.Minimum = TimeSpanAxis.ToDouble(fastestPace);
 			yAxis.Maximum = TimeSpanAxis.ToDouble(slowestPace);
+			yAxis.MajorGridlineStyle = LineStyle.Solid;
+			yAxis.MajorGridlineThickness = 1.0;
+			yAxis.MinorGridlineStyle = LineStyle.Dot;
+			yAxis.MinorGridlineThickness = 1.0;
 			_chart.Axes.Add(yAxis);
 			_chart.Series.Add(series);
 		}
