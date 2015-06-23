@@ -63,16 +63,14 @@ namespace GpxRunParser
 							weeklyStats.Runs++;
 							firstPoint = false;
 						}
-						runStats.UpdateMaxHeartRate(p0.HeartRate);
-						monthlyStats.UpdateMaxHeartRate(p0.HeartRate);
-						weeklyStats.UpdateMaxHeartRate(p0.HeartRate);
+						runStats.SetStartPoint(p0);
+						monthlyStats.SetStartPoint(p0);
+						weeklyStats.SetStartPoint(p0);
 						while (iterator.MoveNext()) {
 							var pt = iterator.Current;
-							var dist = p0.DistanceTo(pt);
-							var deltaT = p0.TimeDifference(pt);
-							runStats.RecordInterval(deltaT, dist, pt.HeartRate, pt.Cadence);
-							monthlyStats.RecordInterval(deltaT, dist, pt.HeartRate, pt.Cadence);
-							weeklyStats.RecordInterval(deltaT, dist, pt.HeartRate, pt.Cadence);
+							runStats.RecordInterval(pt);
+							monthlyStats.RecordInterval(pt);
+							weeklyStats.RecordInterval(pt);
 							p0 = pt;
 						}
 					}

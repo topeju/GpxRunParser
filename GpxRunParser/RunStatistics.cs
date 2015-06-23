@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using GpxRunParser;
 
 public class RunStatistics
@@ -55,6 +56,10 @@ public class RunStatistics
 	public IDictionary<DateTime, double> HeartRateLog { get; set; }
 	public IDictionary<DateTime, TimeSpan> PaceLog { get; set; }
 
+	public IList<DateTime> StartPoints { get; set; }
+
+	private SortedDictionary<DateTime, GpxTrackPoint> LastPoints { get; set; }
+
 	public RunStatistics(double[] zones, TimeSpan[] paces)
 	{
 		ZoneBins = new TimeBin<double>(zones);
@@ -67,27 +72,67 @@ public class RunStatistics
 		Runs = 0;
 		HeartRateLog = new SortedDictionary<DateTime, double>();
 		PaceLog = new SortedDictionary<DateTime, TimeSpan>();
+		LastPoints = new SortedDictionary<DateTime, GpxTrackPoint>();
+		StartPoints = new List<DateTime>();
 	}
 
-	private readonly TimeSpan slowestDisplayedPace = new TimeSpan(0, 20, 0);
+	private static readonly TimeSpan AveragingPeriod = new TimeSpan(0, 0, 15);
+	private static readonly TimeSpan SlowestDisplayedPace = new TimeSpan(0, 20, 0);
 
-	public void RecordInterval(TimeSpan duration, double distance, double heartRate, double cadence)
+	public void SetStartPoint(GpxTrackPoint point)
 	{
-		HeartRateLog[StartTime + TotalTime] = heartRate;
-		ZoneBins.Record(heartRate, duration);
-		var pace = new TimeSpan((long) (1000.0D * duration.Ticks / distance));
-		PaceBins.Record(pace, duration);
-		if (distance > 0.0 && pace < slowestDisplayedPace) {
-			PaceLog[StartTime + TotalTime] = pace;
+		LastPoints = new SortedDictionary<DateTime, GpxTrackPoint>();
+		LastPoints[point.Time] = point;
+		StartPoints.Add(point.Time);
+		UpdateMaxHeartRate(point.HeartRate);
+	}
+
+	public void RecordInterval(GpxTrackPoint point)
+	{
+		// FIXME: This is a silly way to do moving averages. Instead, store the distance and time values in a queue and add and drop them as needed. Summing them up then becomes just summing up the stored numbers, rather than calculating the distances all over again.
+		LastPoints[point.Time] = point;
+		foreach (var key in LastPoints.Keys.Where(k => k < point.Time - AveragingPeriod).ToList()) {
+			// Make sure at least two points remain so we can calculate the time and distance traveled:
+			if (LastPoints.Keys.Count <= 2) {
+				break;
+			}
+			LastPoints.Remove(key);
+			// TODO: What about time travel? (i.e. point.Time < highest Time in LastPoints) - may be rather theoretical.
+		}
+
+		var firstPoint = LastPoints.First().Value;
+		var lastPoint = point;
+		var lastLessOnePoint = LastPoints.Last(pt => pt.Key < point.Time).Value;
+
+		var dist = lastLessOnePoint.DistanceTo(lastPoint);
+		var deltaT = lastLessOnePoint.TimeDifference(lastPoint);
+
+		double averagedDistance = 0.0;
+		var averageTime = new TimeSpan(0);
+		var times = LastPoints.Keys.ToArray();
+		var prevPoint = firstPoint;
+		for (var i = 1; i < LastPoints.Count; i++) {
+			var t = times[i];
+			averagedDistance += prevPoint.DistanceTo(LastPoints[t]);
+			averageTime += prevPoint.TimeDifference(LastPoints[t]);
+			prevPoint = LastPoints[t];
+		}
+
+		HeartRateLog[StartTime + TotalTime] = lastPoint.HeartRate;
+		ZoneBins.Record(lastPoint.HeartRate, deltaT);
+		var averagedPace = new TimeSpan((long) (1000.0D * averageTime.Ticks / averagedDistance));
+		PaceBins.Record(averagedPace, deltaT);
+		if (averagedDistance > 0.0 && averagedPace < SlowestDisplayedPace) {
+			PaceLog[StartTime + TotalTime] = averagedPace;
 		} else {
 			PaceLog[StartTime + TotalTime] = new TimeSpan(0);
 		}
-		TotalHeartbeats += heartRate * duration.TotalMinutes;
-		UpdateMaxHeartRate(heartRate);
+		TotalHeartbeats += lastPoint.HeartRate * deltaT.TotalMinutes;
+		UpdateMaxHeartRate(lastPoint.HeartRate);
 		// Cadence is number of full cycles per minute by the pair of feet, thus there are two steps per cadence per minute?
-		TotalSteps += 2.0D * cadence * duration.TotalMinutes;
-		TotalDistance += distance;
-		TotalTime += duration;
+		TotalSteps += 2.0D * lastPoint.Cadence * deltaT.TotalMinutes;
+		TotalDistance += dist;
+		TotalTime += deltaT;
 	}
 
 	public void UpdateMaxHeartRate(double heartRate)

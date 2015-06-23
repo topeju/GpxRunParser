@@ -32,6 +32,10 @@ namespace GpxRunParser
 			_xAxis.Minimum = DateTimeAxis.ToDouble(_stats.StartTime);
 			_xAxis.Maximum = DateTimeAxis.ToDouble(_stats.StartTime + _stats.TotalTime);
 			_xAxis.StringFormat = "HH:mm";
+			_xAxis.ExtraGridlineStyle = LineStyle.Dash;
+			_xAxis.ExtraGridlineColor = OxyColors.Green;
+			_xAxis.ExtraGridlineThickness = 1.0;
+			_xAxis.ExtraGridlines = stats.StartPoints.Select(DateTimeAxis.ToDouble).ToArray();
 			_chart.Axes.Add(_xAxis);
 			_chart.LegendPosition = LegendPosition.BottomRight;
 		}
