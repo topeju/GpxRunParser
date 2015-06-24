@@ -56,6 +56,7 @@ public class RunStatistics
 
 	public IDictionary<DateTime, double> HeartRateLog { get; set; }
 	public IDictionary<DateTime, TimeSpan> PaceLog { get; set; }
+	public IDictionary<DateTime, double> CadenceLog { get; set; }
 
 	public IList<DateTime> EndPoints { get; set; }
 	public IList<DateTime> StartPoints { get; set; }
@@ -84,6 +85,7 @@ public class RunStatistics
 		Runs = 0;
 		HeartRateLog = new SortedDictionary<DateTime, double>();
 		PaceLog = new SortedDictionary<DateTime, TimeSpan>();
+		CadenceLog = new SortedDictionary<DateTime, double>();
 		StartPoints = new List<DateTime>();
 		EndPoints = new List<DateTime>();
 		_lastPoint = null;
@@ -147,6 +149,9 @@ public class RunStatistics
 
 		HeartRateLog[point.Time] = point.HeartRate;
 		ZoneBins.Record(point.HeartRate, deltaT);
+		TotalHeartbeats += point.HeartRate * deltaT.TotalMinutes;
+		UpdateMaxHeartRate(point.HeartRate);
+
 		var averagedPace = new TimeSpan((long) (1000.0D * averageTime.Ticks / averagedDistance));
 		PaceBins.Record(averagedPace, deltaT);
 		if (averagedDistance > 0.0/* && averagedPace < SlowestDisplayedPace*/) {
@@ -154,10 +159,11 @@ public class RunStatistics
 		} else {
 			PaceLog[point.Time] = SlowestDisplayedPace; //new TimeSpan(0);
 		}
-		TotalHeartbeats += point.HeartRate * deltaT.TotalMinutes;
-		UpdateMaxHeartRate(point.HeartRate);
-		// Cadence is number of full cycles per minute by the pair of feet, thus there are two steps per cadence per minute?
+
+		CadenceLog[point.Time] = point.Cadence;
+		// Cadence is number of full cycles per minute by the pair of feet, thus there are two steps per cadence per minute
 		TotalSteps += 2.0D * point.Cadence * deltaT.TotalMinutes;
+
 		TotalDistance += dist;
 		TotalTime += deltaT;
 

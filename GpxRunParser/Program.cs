@@ -81,6 +81,10 @@ namespace GpxRunParser
 				var paceChart = new PaceChart(baseFileName, runStats);
 				paceChart.Draw();
 				paceChart.SavePng();
+
+				var cadenceChart = new CadenceChart(baseFileName, runStats);
+				cadenceChart.Draw();
+				cadenceChart.SavePng();
 			}
 
 			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.MonthlyStatistics.cshtml"))
