@@ -30,7 +30,7 @@ namespace GpxRunParser
 			_xAxis = new DateTimeAxis {
 				Position = AxisPosition.Bottom,
 				Minimum = DateTimeAxis.ToDouble(_stats.StartTime),
-				Maximum = DateTimeAxis.ToDouble(_stats.StartTime + _stats.TotalTime),
+				Maximum = DateTimeAxis.ToDouble(_stats.EndTime),
 				StringFormat = "HH:mm"
 			};
 			_chart.Axes.Add(_xAxis);
