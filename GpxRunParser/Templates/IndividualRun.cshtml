@@ -97,7 +97,7 @@
 	        </tr>
 	    </table>
 
-	    <h2>Charts</h2>
+	    <h2>Time-Based Charts</h2>
         
 	    <h3>Heart Rate</h3>
 
@@ -110,6 +110,28 @@
         <h3>Cadence</h3>
 
         <img src="@(ViewBag.FileName)_cad.png" />
+
+        <h3>Elevation (from GPX)</h3>
+
+        <img src="@(ViewBag.FileName)_elev.png" />
+
+        <h2>Distance-Based Charts</h2>
+
+        <h3>Heart Rate</h3>
+
+        <img src="@(ViewBag.FileName)_hr_dist.png" />
+
+        <h3>Pace</h3>
+
+        <img src="@(ViewBag.FileName)_pace_dist.png" />
+
+        <h3>Cadence</h3>
+
+        <img src="@(ViewBag.FileName)_cad_dist.png" />
+
+        <h3>Elevation (from GPX)</h3>
+
+        <img src="@(ViewBag.FileName)_elev_dist.png" />
 
 	</body>
 </html>

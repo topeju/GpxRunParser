@@ -57,6 +57,8 @@ public class RunStatistics
 	public IDictionary<DateTime, double> HeartRateLog { get; set; }
 	public IDictionary<DateTime, TimeSpan> PaceLog { get; set; }
 	public IDictionary<DateTime, double> CadenceLog { get; set; }
+	public IDictionary<DateTime, double> ElevationLog { get; set; }
+	public IDictionary<DateTime, double> DistanceLog { get; set; }
 
 	public IList<DateTime> EndPoints { get; set; }
 	public IList<DateTime> StartPoints { get; set; }
@@ -86,6 +88,8 @@ public class RunStatistics
 		HeartRateLog = new SortedDictionary<DateTime, double>();
 		PaceLog = new SortedDictionary<DateTime, TimeSpan>();
 		CadenceLog = new SortedDictionary<DateTime, double>();
+		ElevationLog = new SortedDictionary<DateTime, double>();
+		DistanceLog = new SortedDictionary<DateTime, double>();
 		StartPoints = new List<DateTime>();
 		EndPoints = new List<DateTime>();
 		_lastPoint = null;
@@ -104,6 +108,8 @@ public class RunStatistics
 		}
 		StartPoints.Add(point.Time);
 		UpdateMaxHeartRate(point.HeartRate);
+		ElevationLog[point.Time] = point.Elevation;
+		DistanceLog[point.Time] = TotalDistanceInKm;
 		_lastPoint = point;
 	}
 
@@ -164,8 +170,12 @@ public class RunStatistics
 		// Cadence is number of full cycles per minute by the pair of feet, thus there are two steps per cadence per minute
 		TotalSteps += 2.0D * point.Cadence * deltaT.TotalMinutes;
 
+		ElevationLog[point.Time] = point.Elevation;
+
 		TotalDistance += dist;
 		TotalTime += deltaT;
+
+		DistanceLog[point.Time] = TotalDistanceInKm;
 
 		EndTime = point.Time > EndTime ? point.Time : EndTime;
 

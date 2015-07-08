@@ -85,6 +85,26 @@ namespace GpxRunParser
 				var cadenceChart = new CadenceChart(baseFileName, runStats);
 				cadenceChart.Draw();
 				cadenceChart.SavePng();
+
+				var elevationChart = new ElevationChart(baseFileName, runStats);
+				elevationChart.Draw();
+				elevationChart.SavePng();
+
+				var hrDistChart = new HeartRateDistanceChart(baseFileName, runStats);
+				hrDistChart.Draw();
+				hrDistChart.SavePng();
+
+				var paceDistChart = new PaceDistanceChart(baseFileName, runStats);
+				paceDistChart.Draw();
+				paceDistChart.SavePng();
+
+				var cadenceDistChart = new CadenceDistanceChart(baseFileName, runStats);
+				cadenceDistChart.Draw();
+				cadenceDistChart.SavePng();
+
+				var elevationDistChart = new ElevationDistanceChart(baseFileName, runStats);
+				elevationDistChart.Draw();
+				elevationDistChart.SavePng();
 			}
 
 			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.MonthlyStatistics.cshtml"))
