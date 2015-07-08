@@ -85,6 +85,14 @@ namespace GpxRunParser
 		{
 		}
 
+		private static readonly OxyColor[][] palette = new OxyColor[][] { 
+			new OxyColor[] { OxyColors.White }, // no zones defined
+			new OxyColor[] { OxyColors.Green, OxyColors.Red }, // 1 zone boundary
+			new OxyColor[] { OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 2 zone boundaries
+			new OxyColor[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 3 zone boundaries
+			new OxyColor[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Orange, OxyColors.Red } // 4 zone boundaries
+		};
+
 		public override void Draw()
 		{
 			if (!_stats.HeartRateLog.Any()) {
@@ -94,7 +102,7 @@ namespace GpxRunParser
 			series.Title = "Heart Rate";
 			series.Color = OxyColors.Red;
 			series.Smooth = false;
-			var yAxis = new LinearAxis {
+			var yAxis = new RangeColorAxis {
 				Position = AxisPosition.Left,
 				MajorGridlineStyle = LineStyle.Solid,
 				MajorGridlineThickness = 1.0,
@@ -117,6 +125,15 @@ namespace GpxRunParser
 			yAxis.Minimum = minHr;
 			yAxis.Maximum = maxHr;
 			yAxis.ExtraGridlines = _stats.ZoneBins.Bins.ToArray();
+			var paletteIndex = _stats.ZoneBins.Bins.Count();
+			var lower = 0.0;
+			var index = 0;
+			foreach (var zoneLimit in _stats.ZoneBins.Bins) {
+				yAxis.AddRange(lower, zoneLimit, palette[paletteIndex][index]);
+				lower = zoneLimit;
+				index++;
+			}
+			yAxis.AddRange(lower, double.MaxValue, palette[paletteIndex][index]);
 			_chart.Axes.Add(yAxis);
 			_chart.Series.Add(series);
 		}
@@ -290,6 +307,14 @@ namespace GpxRunParser
 		{
 		}
 
+		private static readonly OxyColor[][] palette = new OxyColor[][] { 
+			new OxyColor[] { OxyColors.White }, // no zones defined
+			new OxyColor[] { OxyColors.Green, OxyColors.Red }, // 1 zone boundary
+			new OxyColor[] { OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 2 zone boundaries
+			new OxyColor[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 3 zone boundaries
+			new OxyColor[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Orange, OxyColors.Red } // 4 zone boundaries
+		};
+
 		public override void Draw()
 		{
 			if (!_stats.HeartRateLog.Any()) {
@@ -299,7 +324,7 @@ namespace GpxRunParser
 			series.Title = "Heart Rate";
 			series.Color = OxyColors.Red;
 			series.Smooth = false;
-			var yAxis = new LinearAxis {
+			var yAxis = new RangeColorAxis {
 				Position = AxisPosition.Left,
 				MajorGridlineStyle = LineStyle.Solid,
 				MajorGridlineThickness = 1.0,
@@ -324,6 +349,15 @@ namespace GpxRunParser
 			yAxis.Minimum = minHr;
 			yAxis.Maximum = maxHr;
 			yAxis.ExtraGridlines = _stats.ZoneBins.Bins.ToArray();
+			var paletteIndex = _stats.ZoneBins.Bins.Count();
+			var lower = 0.0;
+			var index = 0;
+			foreach (var zoneLimit in _stats.ZoneBins.Bins) {
+				yAxis.AddRange(lower, zoneLimit, palette[paletteIndex][index]);
+				lower = zoneLimit;
+				index++;
+			}
+			yAxis.AddRange(lower, double.MaxValue, palette[paletteIndex][index]);
 			_chart.Axes.Add(yAxis);
 			_chart.Series.Add(series);
 		}
