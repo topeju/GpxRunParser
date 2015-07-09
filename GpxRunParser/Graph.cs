@@ -285,8 +285,11 @@ namespace GpxRunParser
 			_xAxis = new LinearAxis {
 				Position = AxisPosition.Bottom,
 				Minimum = 0,
-				Maximum = _stats.TotalDistanceInKm
+				Maximum = _stats.TotalDistanceInKm,
+				ExtraGridlineStyle = LineStyle.Solid,
+				ExtraGridlineColor = OxyColors.DimGray
 			};
+			_xAxis.ExtraGridlines = _stats.StartPoints.Select(t => _stats.DistanceLog[t]).ToArray();
 			_chart.Axes.Add(_xAxis);
 			_chart.LegendPosition = LegendPosition.BottomRight;
 		}
