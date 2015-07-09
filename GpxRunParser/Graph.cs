@@ -49,21 +49,27 @@ namespace GpxRunParser
 			var numStartPoints = _stats.StartPoints.Count;
 			var numEndPoints = _stats.EndPoints.Count;
 			while (startPointIndex < numStartPoints && endPointIndex < numEndPoints) {
-				if (_stats.StartPoints[startPointIndex] > _stats.EndPoints[endPointIndex]) {
-					if (!paused) {
-						pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.EndPoints[endPointIndex]), 0.0));
-						pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.EndPoints[endPointIndex]), 1.0));
-					}
-					endPointIndex++;
-					paused = true;
-				}
-				if (endPointIndex >= numEndPoints || _stats.StartPoints[startPointIndex] < _stats.EndPoints[endPointIndex]) {
-					if (paused) {
-						pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.StartPoints[startPointIndex]), 1.0));
-						pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.StartPoints[startPointIndex]), 0.0));
-					}
+				if (_stats.StartPoints[startPointIndex] == _stats.EndPoints[endPointIndex]) {
+					// Some GPX tracks have had breaks that were both end and start points. Ignore them.
 					startPointIndex++;
-					paused = false;
+					endPointIndex++;
+				} else { 
+					if (_stats.StartPoints[startPointIndex] > _stats.EndPoints[endPointIndex]) {
+						if (!paused) {
+							pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.EndPoints[endPointIndex]), 0.0));
+							pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.EndPoints[endPointIndex]), 1.0));
+						}
+						endPointIndex++;
+						paused = true;
+					}
+					if (endPointIndex >= numEndPoints || _stats.StartPoints[startPointIndex] < _stats.EndPoints[endPointIndex]) {
+						if (paused) {
+							pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.StartPoints[startPointIndex]), 1.0));
+							pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.StartPoints[startPointIndex]), 0.0));
+						}
+						startPointIndex++;
+						paused = false;
+					}
 				}
 			}
 			_chart.Axes.Add(secondYAxis);
