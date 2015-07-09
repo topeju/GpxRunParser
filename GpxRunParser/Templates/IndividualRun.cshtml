@@ -2,8 +2,11 @@
 <html>
 	<head>
 		<title>Run on @(Model.StartTime)</title>
-	</head>
-	<body>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&amp;language=fi"></script>
+    </head>
+	<body onload="load()">
 		
 		<h1>Statistics for a run on @(Model.StartTime)</h1>
 		
@@ -97,6 +100,10 @@
 	        </tr>
 	    </table>
 
+	    <h2>Map</h2>
+
+	    <div id="map" style="width:900px;height:600px"></div>
+
 	    <h2>Time-Based Charts</h2>
         
 	    <h3>Heart Rate</h3>
@@ -133,5 +140,63 @@
 
         <img src="@(ViewBag.FileName)_elev_dist.png" />
 
+        <script type="text/javascript">
+//<![CDATA[
+
+var map;
+var dirRenderer;
+var dirService;
+
+function load() {
+    map = new google.maps.Map(
+        document.getElementById("map"),
+        {
+	        mapTypeId: google.maps.MapTypeId.ROADMAP,
+	        mapTypeControl: true,
+	        mapTypeControlOptions: {
+      			style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+      			mapTypeIds: [
+        			google.maps.MapTypeId.ROADMAP,
+        			google.maps.MapTypeId.SATELLITE,
+        			google.maps.MapTypeId.HYBRID,
+        			google.maps.MapTypeId.TERRAIN
+      			]
+      		}
+        }
+    );
+    var bounds = new google.maps.LatLngBounds(
+    	new google.maps.LatLng(@(Model.MinLatitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)), @(Model.MinLongitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture))),
+	    new google.maps.LatLng(@(Model.MaxLatitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)), @(Model.MaxLongitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)))
+	    );
+	map.fitBounds(bounds);
+	var routePoints = [
+		@foreach (var point in Model.Route) {
+			@:new google.maps.LatLng(@(point.Latitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture))),
+		}
+  	];
+  	var route = new google.maps.Polyline({
+    	path: routePoints,
+    	geodesic: true,
+    	strokeColor: '#FF0000',
+    	strokeOpacity: 1.0,
+    	strokeWeight: 2
+  	});
+  	route.setMap(map);
+  	var startPoint = new google.maps.Marker({
+  		position: routePoints[0],
+  		map: map,
+  		icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A3|00FF00",
+  		title: "Start"
+  	});
+  	var endPoint = new google.maps.Marker({
+  		position: routePoints[routePoints.length-1],
+  		map: map,
+  		icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000",
+  		title: "Finish"
+  	});
+}
+
+//]]>
+        </script>
 	</body>
 </html>

@@ -63,6 +63,12 @@ public class RunStatistics
 	public IList<DateTime> EndPoints { get; set; }
 	public IList<DateTime> StartPoints { get; set; }
 
+	public IList<GpxTrackPoint> Route { get; set; }
+	public double MinLatitude { get; set; }
+	public double MaxLatitude { get; set; }
+	public double MinLongitude { get; set; }
+	public double MaxLongitude { get; set; }
+
 	private struct PointIntervalData
 	{
 		public double distance;
@@ -93,6 +99,11 @@ public class RunStatistics
 		StartPoints = new List<DateTime>();
 		EndPoints = new List<DateTime>();
 		_lastPoint = null;
+		Route = new List<GpxTrackPoint>();
+		MinLatitude = double.MaxValue;
+		MaxLatitude = double.MinValue;
+		MinLongitude = double.MaxValue;
+		MaxLongitude = double.MinValue;
 	}
 
 	private const int AveragingPeriod = 15; // Seconds. Also, number of point distance values stored (-1).
@@ -111,6 +122,7 @@ public class RunStatistics
 		ElevationLog[point.Time] = point.Elevation;
 		DistanceLog[point.Time] = TotalDistanceInKm;
 		_lastPoint = point;
+		RecordRoutePoint(point);
 	}
 
 	public void RecordInterval(GpxTrackPoint point)
@@ -179,7 +191,22 @@ public class RunStatistics
 
 		EndTime = point.Time > EndTime ? point.Time : EndTime;
 
+		RecordRoutePoint(point);
+
 		_lastPoint = point;
+	}
+
+	private void RecordRoutePoint(GpxTrackPoint point)
+	{
+		Route.Add(point);
+		if (point.Latitude < MinLatitude)
+			MinLatitude = point.Latitude;
+		if (point.Latitude > MaxLatitude)
+			MaxLatitude = point.Latitude;
+		if (point.Longitude < MinLongitude)
+			MinLongitude = point.Longitude;
+		if (point.Longitude > MaxLongitude)
+			MaxLongitude = point.Longitude;
 	}
 
 	public void UpdateMaxHeartRate(double heartRate)
