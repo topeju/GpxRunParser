@@ -1,0 +1,59 @@
+﻿@inherits GpxRunParser.Templates.ModelTemplate<List<GpxRunParser.RunInfo>>
+@using System.Globalization;
+<html>
+	<head>
+		<title>Run Statistics</title>
+	</head>
+	<body>
+		<h1>Run Statistics</h1>
+
+		@for (var month = (DateTime)(ViewBag.StartDate); month < (DateTime)(ViewBag.EndDate); month = month.AddMonths(1)) {
+			<h2>@(CultureInfo.CurrentCulture.TextInfo.ToTitleCase(month.ToString("MMMM yyyy")))</h2>
+
+			<a href="Monthly-@(month.ToString("yyyy-MM")).html">Monthly statistics</a>
+
+			<table border="1">
+				<tr>
+					<th>Week</th>
+					<th>Mon</th>
+					<th>Tue</th>
+					<th>Wed</th>
+					<th>Thu</th>
+					<th>Fri</th>
+					<th>Sat</th>
+					<th>Sun</th>
+				</tr>
+				@{var delta = DayOfWeek.Monday - month.DayOfWeek;
+				var calendar = CultureInfo.CurrentUICulture.Calendar;
+				if (delta > 0) {
+					delta -= 7;
+				}
+				for (var week = month.AddDays(delta); week.AddDays(6).Month == month.Month || week.Month == month.Month; week = week.AddDays(7)) {
+					var weekNumber = calendar.GetWeekOfYear(week, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+				<tr>
+					<th>@if (Model.Any(ri => calendar.GetWeekOfYear(ri.StartTime, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday) == weekNumber && ri.StartTime.Year == week.Year)) {
+						<a href='Weekly-@(week.ToString("yyyy"))-@(weekNumber.ToString("D2")).html'>@(weekNumber)</a>
+					} else {
+						@(weekNumber)
+					}</th>
+					@{DateTime day = week;
+					int dayNum = 0;
+					for (; dayNum < 7; dayNum++, day = day.AddDays(1)) {
+						<td>
+							@if (day.Month == month.Month) {
+								@(day.Day)
+								foreach (var run in Model.Where(ri => ri.StartTime.Date == day.Date).OrderBy(ri => ri.StartTime)) {
+									<br /><a href="@(run.FileName)">@(run.DistanceInKm.ToString("N2")) km in @(run.Duration.ToString("g"))</a>
+								}
+							}
+						</td>
+					}
+					}
+				</tr>
+				}
+				}
+			</table>
+		}
+
+	</body>
+</html>

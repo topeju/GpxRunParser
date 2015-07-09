@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -63,6 +64,8 @@ namespace GpxRunParser
 			var extRegexp = new Regex(@"\.gpx$", RegexOptions.IgnoreCase);
 			var gpxFiles = Directory.EnumerateFiles(dirName, filePattern);
 
+			var runs = new List<RunInfo>();
+
 			foreach (var fileName in gpxFiles) {
 				var runStats = analyzer.Analyze(fileName);
 
@@ -73,6 +76,8 @@ namespace GpxRunParser
 				var page = Razor.Parse(pageTemplate, runStats, viewBag, null);
 				using (var output = File.CreateText(outputFileName))
 					output.Write(page);
+
+				runs.Add(new RunInfo(outputFileName, runStats));
 
 				var hrChart = new HeartRateChart(baseFileName, runStats);
 				hrChart.Draw();
@@ -131,6 +136,22 @@ namespace GpxRunParser
 				using (var output = File.CreateText(outputFileName))
 					output.Write(page);
 			}
+
+			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.Index.cshtml"))
+			using (var reader = new StreamReader(stream))
+				pageTemplate = reader.ReadToEnd();
+
+			var indexViewBag = new DynamicViewBag();
+			var startDate = runs.Min(r => r.StartTime);
+			startDate = new DateTime(startDate.Year, startDate.Month, 1);
+			var endDate = runs.Max(r => r.StartTime);
+			endDate = new DateTime(endDate.Year, endDate.Month + 1, 1).AddDays(-1);
+			indexViewBag.AddValue("StartDate", startDate);
+			indexViewBag.AddValue("EndDate", endDate);
+			var indexPage = Razor.Parse(pageTemplate, runs, indexViewBag, null);
+			using (var output = File.CreateText("Index.html"))
+				output.Write(indexPage);
+
 		}
 	}
 

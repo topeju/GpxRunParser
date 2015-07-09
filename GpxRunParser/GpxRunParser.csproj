@@ -67,6 +67,7 @@
     <Compile Include="TimeBin.cs" />
     <Compile Include="RunStatistics.cs" />
     <Compile Include="RunAnalyzer.cs" />
+    <Compile Include="RunInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -85,5 +86,6 @@
     <EmbeddedResource Include="Templates\IndividualRun.cshtml" />
     <EmbeddedResource Include="Templates\MonthlyStatistics.cshtml" />
     <EmbeddedResource Include="Templates\WeeklyStatistics.cshtml" />
+    <EmbeddedResource Include="Templates\Index.cshtml" />
   </ItemGroup>
 </Project>

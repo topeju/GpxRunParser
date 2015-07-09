@@ -7,6 +7,7 @@ Current features
 ----------------
 
 * Parses all GPX files in a directory and outputs statistics in simple HTML files beside each GPX file.
+* Creates an index page that links each of the HTML files.
 * Generates heart rate, pace, cadence and elevation charts, with pauses in the workout highlighted.
 * Calculates time elapsed in each heart rate zone (zones specified using a command line parameter).
 * Calculates time elapsed at different paces (bins specified using a command line parameter). Pace is calculated using moving averages to reduce the amount of noise in position data.
@@ -16,6 +17,5 @@ Current features
 Planned features
 ----------------
 
-* Create an index page that links each of the HTML files.
 * Apply styling to the pages (they are now very bare-bones).
 * Generate maps for each run, with color-coding by pace.
