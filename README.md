@@ -18,6 +18,7 @@ Current features
 Planned features
 ----------------
 
+* Use config file for application settings instead of command line options and hard-coded values
 * Add more information to the maps for each run, with color-coding by pace or heart rate.
 * Include rough maps in the weekly and monthly statistics (possibly only the starting locations?)
 
