@@ -2,14 +2,18 @@
 <html>
 	<head>
 		<title>Statistics for the week starting on @(Model.StartTime.ToString("MMMM dd, yyyy"))</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
 	</head>
 	<body>
+	<div class="container-fluid">
 		
 		<h1>Statistics for the week starting on @(Model.StartTime.ToString("MMMM dd, yyyy"))</h1>
 		
 		<h2>Overall statistics</h2>
 
-		<table>
+		<table class="table">
 			<tbody>
 				<tr>
 					<th>Number of runs</th>
@@ -20,7 +24,7 @@
 					<td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
 				</tr>
 				<tr>
-					<th>Total time</th>
+					<th>Running time</th>
 					<td>@(Model.TotalTime.ToString("g"))</td>
 				</tr>
 				<tr>
@@ -51,6 +55,10 @@
 					<th>Average stride length</th>
 					<td>@(Model.AverageStrideLength.ToString("N0")) cm</td>
 				</tr>
+				<tr>
+					<th>Total climb</th>
+					<td>@(Model.TotalClimb.ToString("N0")) m (according to GPS data)</td>
+				</tr>
 			</tbody>
 		</table>
 		
@@ -59,7 +67,8 @@
 			var totalTime = Model.TotalTime.TotalMilliseconds;
 		}
 
-		<table>
+		<table class="table">
+			<tbody>
 			<tr>
 				<th>&lt; @(Model.ZoneBins.Bins[0])</th>
 				<td>@(Model.ZoneBins.Values[0])</td>
@@ -77,11 +86,13 @@
 				<td>@(Model.ZoneBins.Values[Model.ZoneBins.Bins.Length])</td>
 				<td>@((Model.ZoneBins.Values[Model.ZoneBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
 			</tr>
+			</tbody>
 		</table>
 		
 		<h2>Time spent in each pace range</h2>
 		
-		<table>
+		<table class="table">
+			<tbody>
 			<tr>
 				<th>&lt; @(Model.PaceBins.Bins[0])</th>
 				<td>@(Model.PaceBins.Values[0])</td>
@@ -99,7 +110,9 @@
 				<td>@(Model.PaceBins.Values[Model.PaceBins.Bins.Length])</td>
 				<td>@((Model.PaceBins.Values[Model.PaceBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
 			</tr>
+			</tbody>
 		</table>
 
+		</div>
 	</body>
 </html>

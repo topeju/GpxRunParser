@@ -1,30 +1,38 @@
 ﻿@inherits GpxRunParser.Templates.ModelTemplate<RunStatistics>
+@using System.Globalization;
 <html>
 	<head>
 		<title>Run on @(Model.StartTime)</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
 		<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&amp;language=fi"></script>
     </head>
 	<body onload="load()">
+
+	<div class="container-fluid">
 		
-		<h1>Statistics for a run on @(Model.StartTime)</h1>
+		<h1>Run on @(Model.StartTime)</h1>
 		
 		<h2>Overall statistics</h2>
 
-		<table>
+		<table class="table">
 			<tbody>
 				<tr>
 					<th>Total distance</th>
 					<td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
 				</tr>
 				<tr>
-					<th>Total time</th>
+					<th>Running time</th>
 					<td>@(Model.TotalTime.ToString("g"))</td>
 				</tr>
 				<tr>
+					<th>Total time</th>
+					<td>@((Model.EndTime - Model.StartTime).ToString("g"))</td>
+				</tr>
+				<tr>
 					<th>Average pace</th>
-					<td>@(Model.AveragePace.ToString("g"))/km</td>
+					<td>@(Model.AveragePace.ToString(@"h\:mm\:ss"))/km</td>
 				</tr>
 				<tr>
 					<th>Average speed</th>
@@ -62,7 +70,8 @@
 			var totalTime = Model.TotalTime.TotalMilliseconds;
 		}
 
-		<table>
+		<table class="table">
+			<tbody>
 			<tr>
 				<th>&lt; @(Model.ZoneBins.Bins[0])</th>
 				<td>@(Model.ZoneBins.Values[0])</td>
@@ -80,11 +89,13 @@
 				<td>@(Model.ZoneBins.Values[Model.ZoneBins.Bins.Length])</td>
 				<td>@((Model.ZoneBins.Values[Model.ZoneBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
 			</tr>
+			</tbody>
 		</table>
 		
 		<h2>Time spent in each pace range</h2>
 		
-	    <table>
+	    <table class="table">
+	        <tbody>
 	        <tr>
 	            <th>&lt; @(Model.PaceBins.Bins[0])</th>
 	            <td>@(Model.PaceBins.Values[0])</td>
@@ -102,6 +113,7 @@
 	            <td>@(Model.PaceBins.Values[Model.PaceBins.Bins.Length])</td>
 	            <td>@((Model.PaceBins.Values[Model.PaceBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
 	        </tr>
+	        </tbody>
 	    </table>
 
 	    <h2>Map</h2>
@@ -144,6 +156,8 @@
 
         <img src="@(ViewBag.FileName)_elev_dist.png" />
 
+        </div>
+
         <script type="text/javascript">
 //<![CDATA[
 
@@ -169,13 +183,13 @@ function load() {
         }
     );
     var bounds = new google.maps.LatLngBounds(
-    	new google.maps.LatLng(@(Model.MinLatitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)), @(Model.MinLongitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture))),
-	    new google.maps.LatLng(@(Model.MaxLatitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)), @(Model.MaxLongitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)))
+    	new google.maps.LatLng(@(Model.MinLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MinLongitude.ToString("g", CultureInfo.InvariantCulture))),
+	    new google.maps.LatLng(@(Model.MaxLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MaxLongitude.ToString("g", CultureInfo.InvariantCulture)))
 	    );
 	map.fitBounds(bounds);
 	var routePoints = [
 		@foreach (var point in Model.Route) {
-			@:new google.maps.LatLng(@(point.Latitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture))),
+			@:new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),
 		}
   	];
   	var route = new google.maps.Polyline({
@@ -201,8 +215,8 @@ function load() {
   	var pausePoints = [
   	@foreach (var point in Model.Pauses) {
   		<text>new google.maps.Marker({
-  			position: new google.maps.LatLng(@(point.PauseEnd.Latitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)),
-  				@(point.PauseEnd.Longitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture))),
+  			position: new google.maps.LatLng(@(point.PauseEnd.Latitude.ToString("g", CultureInfo.InvariantCulture)),
+  				@(point.PauseEnd.Longitude.ToString("g", CultureInfo.InvariantCulture))),
   			map: map,
   			icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%8F%B8|888888",
   			title: "Pause"

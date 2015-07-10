@@ -3,25 +3,31 @@
 <html>
 	<head>
 		<title>Run Statistics</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
 	</head>
 	<body>
+
+	<div class="container-fluid">
+		
 		<h1>Run Statistics</h1>
 
 		@for (var month = (DateTime)(ViewBag.StartDate); month < (DateTime)(ViewBag.EndDate); month = month.AddMonths(1)) {
 			<h2>@(CultureInfo.CurrentCulture.TextInfo.ToTitleCase(month.ToString("MMMM yyyy")))</h2>
 
-			<a href="Monthly-@(month.ToString("yyyy-MM")).html">Monthly statistics</a>
+			<p><a href="Monthly-@(month.ToString("yyyy-MM")).html">Monthly statistics</a></p>
 
-			<table border="1">
+			<table class="table table-bordered table-condensed">
 				<tr>
-					<th>Week</th>
-					<th>Mon</th>
-					<th>Tue</th>
-					<th>Wed</th>
-					<th>Thu</th>
-					<th>Fri</th>
-					<th>Sat</th>
-					<th>Sun</th>
+					<th style="width:5%">Week</th>
+					<th style="width:13.5714285714%">Mon</th>
+					<th style="width:13.5714285714%">Tue</th>
+					<th style="width:13.5714285714%">Wed</th>
+					<th style="width:13.5714285714%">Thu</th>
+					<th style="width:13.5714285714%">Fri</th>
+					<th style="width:13.5714285714%">Sat</th>
+					<th style="width:13.5714285714%">Sun</th>
 				</tr>
 				@{var delta = DayOfWeek.Monday - month.DayOfWeek;
 				var calendar = CultureInfo.CurrentUICulture.Calendar;
@@ -55,5 +61,6 @@
 			</table>
 		}
 
+		</div>
 	</body>
 </html>

@@ -9,13 +9,15 @@ Current features
 * Parses all GPX files in a directory and outputs statistics in simple HTML files beside each GPX file.
 * Creates an index page that links each of the HTML files.
 * Generates heart rate, pace, cadence and elevation charts, with pauses in the workout highlighted.
+* Shows a Google Map of the run route.
 * Calculates time elapsed in each heart rate zone (zones specified using a command line parameter).
 * Calculates time elapsed at different paces (bins specified using a command line parameter). Pace is calculated using moving averages to reduce the amount of noise in position data.
-* Produces weekly and monthly statistics as well as statistics on each individual run. (Charts are only generated for individual runs.)
+* Produces weekly and monthly statistics as well as statistics on each individual run. (Charts and maps are only generated for individual runs.)
 
 
 Planned features
 ----------------
 
-* Apply styling to the pages (they are now very bare-bones).
-* Generate maps for each run, with color-coding by pace.
+* Add more information to the maps for each run, with color-coding by pace or heart rate.
+* Include rough maps in the weekly and monthly statistics (possibly only the starting locations?)
+
