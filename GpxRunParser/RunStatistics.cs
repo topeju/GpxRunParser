@@ -46,6 +46,8 @@ public class RunStatistics
 		get { return TotalDistance * 100.0D / TotalSteps; }
 	}
 
+	public double TotalClimb { get; private set; }
+
 	public DateTime StartTime { get; set; }
 	public DateTime EndTime { get; set; }
 
@@ -90,6 +92,7 @@ public class RunStatistics
 		TotalHeartbeats = 0.0D;
 		MaxHeartRate = 0.0D;
 		TotalSteps = 0.0D;
+		TotalClimb = 0.0D;
 		Runs = 0;
 		HeartRateLog = new SortedDictionary<DateTime, double>();
 		PaceLog = new SortedDictionary<DateTime, TimeSpan>();
@@ -186,6 +189,11 @@ public class RunStatistics
 
 		TotalDistance += dist;
 		TotalTime += deltaT;
+
+		var intervalClimb = point.Elevation - _lastPoint.Elevation;
+		if (intervalClimb > 0.0D) {
+			TotalClimb += intervalClimb;
+		}
 
 		DistanceLog[point.Time] = TotalDistanceInKm;
 
