@@ -60,10 +60,15 @@ public class RunStatistics
 	public IDictionary<DateTime, TimeSpan> PaceLog { get; set; }
 	public IDictionary<DateTime, double> CadenceLog { get; set; }
 	public IDictionary<DateTime, double> ElevationLog { get; set; }
+	public IDictionary<DateTime, double> SlopeLog { get; set; }
 	public IDictionary<DateTime, double> DistanceLog { get; set; }
 
-	public IList<DateTime> EndPoints { get; set; }
-	public IList<DateTime> StartPoints { get; set; }
+	public class PauseInfo {
+		public GpxTrackPoint PauseStart { get; set; }
+		public GpxTrackPoint PauseEnd { get; set; }
+	}
+
+	public IList<PauseInfo> Pauses { get; set; }
 
 	public IList<GpxTrackPoint> Route { get; set; }
 	public double MinLatitude { get; set; }
@@ -74,6 +79,7 @@ public class RunStatistics
 	private struct PointIntervalData
 	{
 		public double distance;
+		public double climb;
 		public TimeSpan interval;
 	}
 
@@ -98,9 +104,9 @@ public class RunStatistics
 		PaceLog = new SortedDictionary<DateTime, TimeSpan>();
 		CadenceLog = new SortedDictionary<DateTime, double>();
 		ElevationLog = new SortedDictionary<DateTime, double>();
+		SlopeLog = new SortedDictionary<DateTime, double>();
 		DistanceLog = new SortedDictionary<DateTime, double>();
-		StartPoints = new List<DateTime>();
-		EndPoints = new List<DateTime>();
+		Pauses = new List<PauseInfo>();
 		_lastPoint = null;
 		Route = new List<GpxTrackPoint>();
 		MinLatitude = double.MaxValue;
@@ -118,12 +124,14 @@ public class RunStatistics
 		_earliestPointOffset = -1;
 		_bufferCount = 0;
 		if (_lastPoint != null) {
-			EndPoints.Add(_lastPoint.Time);
+			Pauses.Add(new PauseInfo {
+				PauseStart = _lastPoint,
+				PauseEnd = point
+			});
 		}
-		StartPoints.Add(point.Time);
 		UpdateMaxHeartRate(point.HeartRate);
-		ElevationLog[point.Time] = point.Elevation;
 		DistanceLog[point.Time] = TotalDistanceInKm;
+		SlopeLog[point.Time] = 0.0D;
 		_lastPoint = point;
 		RecordRoutePoint(point);
 	}
@@ -132,15 +140,15 @@ public class RunStatistics
 	{
 		// Sequence (AveragingPeriod=4):
 		// ___, ___, ___, ___ (latest = -1, earliest = -1)
-		// P01, ___, ___, ___ (latest = 0, earliest = 0)
-		// P01, P12, ___, ___ (latest = 1, earliest = 0)
-		// P01, P12, P23, ___ (latest = 2, earliest = 0)
-		// P01, P12, P23, P34 (latest = 3, earliest = 0)
-		// P45, P12, P23, P34 (latest = 0, earliest = 1)
-		// P45, P56, P23, P34 (latest = 1, earliest = 2)
-		// P45, P56, P67, P34 (latest = 2, earliest = 3)
-		// P45, P56, P67, P78 (latest = 3, earliest = 0)
-		// P89, P56, P67, P78 (latest = 0, earliest = 1)
+		// Δ01, ___, ___, ___ (latest = 0, earliest = 0)
+		// Δ01, Δ12, ___, ___ (latest = 1, earliest = 0)
+		// Δ01, Δ12, Δ23, ___ (latest = 2, earliest = 0)
+		// Δ01, Δ12, Δ23, Δ34 (latest = 3, earliest = 0)
+		// Δ45, Δ12, Δ23, Δ34 (latest = 0, earliest = 1)
+		// Δ45, Δ56, Δ23, Δ34 (latest = 1, earliest = 2)
+		// Δ45, Δ56, Δ67, Δ34 (latest = 2, earliest = 3)
+		// Δ45, Δ56, Δ67, Δ78 (latest = 3, earliest = 0)
+		// Δ89, Δ56, Δ67, Δ78 (latest = 0, earliest = 1)
 		_latestPointOffset++;
 		if (_bufferCount < AveragingPeriod) _bufferCount++;
 		if (_latestPointOffset >= AveragingPeriod) {
@@ -156,15 +164,18 @@ public class RunStatistics
 		}
 
 		_lastIntervals[_latestPointOffset].distance = _lastPoint.DistanceTo(point);
+		_lastIntervals[_latestPointOffset].climb = point.Elevation - _lastPoint.Elevation;
 		_lastIntervals[_latestPointOffset].interval = _lastPoint.TimeDifference(point);
 
 		var dist = _lastPoint.DistanceTo(point);
 		var deltaT = _lastPoint.TimeDifference(point);
 
 		double averagedDistance = 0.0;
+		double averagedClimb = 0.0;
 		var averageTime = new TimeSpan(0);
 		for (var i = 0; i < _bufferCount; i++) {
 			averagedDistance += _lastIntervals[i].distance;
+			averagedClimb += _lastIntervals[i].climb;
 			averageTime += _lastIntervals[i].interval;
 		}
 
@@ -186,6 +197,7 @@ public class RunStatistics
 		TotalSteps += 2.0D * point.Cadence * deltaT.TotalMinutes;
 
 		ElevationLog[point.Time] = point.Elevation;
+		SlopeLog[point.Time] = 100.0D * Math.Tan(averagedClimb / averagedDistance);
 
 		TotalDistance += dist;
 		TotalTime += deltaT;

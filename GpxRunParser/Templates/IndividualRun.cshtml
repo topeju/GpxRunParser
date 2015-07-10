@@ -198,6 +198,17 @@ function load() {
   		icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000",
   		title: "Finish"
   	});
+  	var pausePoints = [
+  	@foreach (var point in Model.Pauses) {
+  		<text>new google.maps.Marker({
+  			position: new google.maps.LatLng(@(point.PauseEnd.Latitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture)),
+  				@(point.PauseEnd.Longitude.ToString("g", System.Globalization.CultureInfo.InvariantCulture))),
+  			map: map,
+  			icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%8F%B8|888888",
+  			title: "Pause"
+  		}),</text>
+  	}
+  	];
 }
 
 //]]>

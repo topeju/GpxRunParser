@@ -43,34 +43,11 @@ namespace GpxRunParser
 		{
 			var pauseSeries = new AreaSeries { Title = "Paused", Color = OxyColors.DimGray, LineStyle = LineStyle.None, YAxisKey = "Secondary" };
 			var secondYAxis = new LinearAxis { Position = AxisPosition.Right, Minimum = 0.0, Maximum = 1.0, Key = "Secondary", IsAxisVisible = false };
-			var startPointIndex = 0;
-			var endPointIndex = 0;
-			var paused = false;
-			var numStartPoints = _stats.StartPoints.Count;
-			var numEndPoints = _stats.EndPoints.Count;
-			while (startPointIndex < numStartPoints && endPointIndex < numEndPoints) {
-				if (_stats.StartPoints[startPointIndex] == _stats.EndPoints[endPointIndex]) {
-					// Some GPX tracks have had breaks that were both end and start points. Ignore them.
-					startPointIndex++;
-					endPointIndex++;
-				} else { 
-					if (_stats.StartPoints[startPointIndex] > _stats.EndPoints[endPointIndex]) {
-						if (!paused) {
-							pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.EndPoints[endPointIndex]), 0.0));
-							pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.EndPoints[endPointIndex]), 1.0));
-						}
-						endPointIndex++;
-						paused = true;
-					}
-					if (endPointIndex >= numEndPoints || _stats.StartPoints[startPointIndex] < _stats.EndPoints[endPointIndex]) {
-						if (paused) {
-							pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.StartPoints[startPointIndex]), 1.0));
-							pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(_stats.StartPoints[startPointIndex]), 0.0));
-						}
-						startPointIndex++;
-						paused = false;
-					}
-				}
+			foreach (var pause in _stats.Pauses) {
+				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseStart.Time), 0.0));
+				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseStart.Time), 1.0));
+				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseEnd.Time), 1.0));
+				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseEnd.Time), 0.0));
 			}
 			_chart.Axes.Add(secondYAxis);
 			_chart.Series.Add(pauseSeries);
@@ -249,28 +226,46 @@ namespace GpxRunParser
 			if (!_stats.ElevationLog.Any()) {
 				return;
 			}
-			var series = new LineSeries { Title = "Elevation", Color = OxyColors.Brown, Smooth = false };
-			var yAxis = new LinearAxis {
+			var elevationSeries = new LineSeries { Title = "Elevation", Color = OxyColors.Brown, YAxisKey = "Elevation", Smooth = false };
+			var slopeSeries = new LineSeries { Title = "Slope", Color = OxyColors.Blue, YAxisKey = "Slope", Smooth = false }; 
+			var elevationAxis = new LinearAxis {
 				Position = AxisPosition.Left,
 				MajorGridlineStyle = LineStyle.Solid,
 				MajorGridlineThickness = 1.0,
 				MinorGridlineStyle = LineStyle.Dot,
-				MinorGridlineThickness = 1.0
+				MinorGridlineThickness = 1.0,
+				Key = "Elevation"
+			};
+			var slopeAxis = new LinearAxis {
+				Position = AxisPosition.Right,
+				Key = "Slope"
 			};
 			var minimumElevation = double.MaxValue;
 			var maximumElevation = double.MinValue;
+			var minimumSlope = double.MaxValue;
+			var maximumSlope = double.MinValue;
 			foreach (var time in _stats.ElevationLog.Keys) {
 				var elev = _stats.ElevationLog[time];
-				series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), elev));
+				elevationSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), elev));
 				if (elev < minimumElevation)
 					minimumElevation = elev;
 				if (elev > maximumElevation)
 					maximumElevation = elev;
+				var slope = _stats.SlopeLog[time];
+				slopeSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), slope));
+				if (slope < minimumSlope)
+					minimumSlope = slope;
+				if (slope > maximumSlope)
+					maximumSlope = slope;
 			}
-			yAxis.Minimum = minimumElevation;
-			yAxis.Maximum = maximumElevation;
-			_chart.Axes.Add(yAxis);
-			_chart.Series.Add(series);
+			elevationAxis.Minimum = minimumElevation;
+			elevationAxis.Maximum = maximumElevation;
+			slopeAxis.Minimum = Math.Max(minimumSlope, -60.0D);
+			slopeAxis.Maximum = Math.Min(maximumSlope, 60.0D);
+			_chart.Axes.Add(slopeAxis);
+			_chart.Series.Add(slopeSeries);
+			_chart.Axes.Add(elevationAxis);
+			_chart.Series.Add(elevationSeries);
 		}
 	}
 
@@ -295,7 +290,7 @@ namespace GpxRunParser
 				ExtraGridlineStyle = LineStyle.Solid,
 				ExtraGridlineColor = OxyColors.DimGray
 			};
-			_xAxis.ExtraGridlines = _stats.StartPoints.Select(t => _stats.DistanceLog[t]).ToArray();
+			_xAxis.ExtraGridlines = _stats.Pauses.Select(p => _stats.DistanceLog[p.PauseEnd.Time]).ToArray();
 			_chart.Axes.Add(_xAxis);
 			_chart.LegendPosition = LegendPosition.BottomRight;
 		}
@@ -480,30 +475,48 @@ namespace GpxRunParser
 			if (!_stats.ElevationLog.Any()) {
 				return;
 			}
-			var series = new LineSeries { Title = "Elevation", Color = OxyColors.Brown, Smooth = false };
-			var yAxis = new LinearAxis {
+			var elevationSeries = new LineSeries { Title = "Elevation", Color = OxyColors.Brown, YAxisKey = "Elevation", Smooth = false };
+			var slopeSeries = new LineSeries { Title = "Slope", Color = OxyColors.Blue, YAxisKey = "Slope", Smooth = false }; 
+			var elevationAxis = new LinearAxis {
 				Position = AxisPosition.Left,
 				MajorGridlineStyle = LineStyle.Solid,
 				MajorGridlineThickness = 1.0,
 				MinorGridlineStyle = LineStyle.Dot,
-				MinorGridlineThickness = 1.0
+				MinorGridlineThickness = 1.0,
+				Key = "Elevation"
+			};
+			var slopeAxis = new LinearAxis {
+				Position = AxisPosition.Right,
+				Key = "Slope"
 			};
 			var minimumElevation = double.MaxValue;
 			var maximumElevation = double.MinValue;
+			var minimumSlope = double.MaxValue;
+			var maximumSlope = double.MinValue;
 			foreach (var time in _stats.DistanceLog.Keys) {
 				if (!_stats.ElevationLog.ContainsKey(time))
 					continue;
 				var elev = _stats.ElevationLog[time];
-				series.Points.Add(new DataPoint(_stats.DistanceLog[time], elev));
+				elevationSeries.Points.Add(new DataPoint(_stats.DistanceLog[time], elev));
 				if (elev < minimumElevation)
 					minimumElevation = elev;
 				if (elev > maximumElevation)
 					maximumElevation = elev;
+				var slope = _stats.SlopeLog[time];
+				slopeSeries.Points.Add(new DataPoint(_stats.DistanceLog[time], slope));
+				if (slope < minimumSlope)
+					minimumSlope = slope;
+				if (slope > maximumSlope)
+					maximumSlope = slope;
 			}
-			yAxis.Minimum = minimumElevation;
-			yAxis.Maximum = maximumElevation;
-			_chart.Axes.Add(yAxis);
-			_chart.Series.Add(series);
+			elevationAxis.Minimum = minimumElevation;
+			elevationAxis.Maximum = maximumElevation;
+			slopeAxis.Minimum = Math.Max(minimumSlope, -60.0D);
+			slopeAxis.Maximum = Math.Min(maximumSlope, 60.0D);
+			_chart.Axes.Add(slopeAxis);
+			_chart.Series.Add(slopeSeries);
+			_chart.Axes.Add(elevationAxis);
+			_chart.Series.Add(elevationSeries);
 		}
 	}
 
