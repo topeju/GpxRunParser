@@ -6,12 +6,12 @@ namespace GpxRunParser
 {
 	public class GpxTrackPoint
 	{
-		public double Latitude { get; set; }
-		public double Longitude { get; set; }
-		public double Elevation { get; set; }
-		public DateTime Time { get; set; }
-		public double HeartRate { get; set; }
-		public double Cadence { get; set; }
+		public double Latitude { get; private set; }
+		public double Longitude { get; private set; }
+		public double Elevation { get; private set; }
+		public DateTime Time { get; private set; }
+		public double HeartRate { get; private set; }
+		public double Cadence { get; private set; }
 
 		public GpxTrackPoint()
 		{
@@ -51,9 +51,9 @@ namespace GpxRunParser
 		public double DistanceTo(GpxTrackPoint otherPoint)
 		{
 			const double equatorialRadius = 6378137.0D; // m
-			var latDiff = (otherPoint.Latitude - this.Latitude) * Math.PI / 180.0;
-			var lonDiff = (otherPoint.Longitude - this.Longitude) * Math.PI / 180.0;
-			var lat1 = this.Latitude * Math.PI / 180.0;
+			var latDiff = (otherPoint.Latitude - Latitude) * Math.PI / 180.0;
+			var lonDiff = (otherPoint.Longitude - Longitude) * Math.PI / 180.0;
+			var lat1 = Latitude * Math.PI / 180.0;
 			var lat2 = otherPoint.Latitude * Math.PI / 180.0;
 			var a = Math.Sin(latDiff / 2.0) * Math.Sin(latDiff / 2.0)
 					+ Math.Sin(lonDiff / 2.0) * Math.Sin(lonDiff / 2.0) * Math.Cos(lat1) * Math.Cos(lat2);
@@ -63,7 +63,7 @@ namespace GpxRunParser
 
 		public TimeSpan TimeDifference(GpxTrackPoint otherPoint)
 		{
-			return otherPoint.Time - this.Time;
+			return otherPoint.Time - Time;
 		}
 	}
 }

@@ -37,41 +37,40 @@ namespace GpxRunParser
 								 select new GpxTrackPoint(point);
 					var iterator = points.GetEnumerator();
 					if (iterator.MoveNext()) {
-						var p0 = iterator.Current;
+						var pt = iterator.Current;
 						if (firstPoint) {
-							var month = new DateTime(p0.Time.Year, p0.Time.Month, 1);
+							var month = new DateTime(pt.Time.Year, pt.Time.Month, 1);
 							if (MonthlyStats.ContainsKey(month)) {
 								monthlyStats = MonthlyStats[month];
 							} else {
 								MonthlyStats[month] = monthlyStats = new RunStatistics(_heartRateZones, _paceZones);
 								monthlyStats.StartTime = month;
 							}
-							var deltaDays = DayOfWeek.Monday - p0.Time.DayOfWeek;
+							var deltaDays = DayOfWeek.Monday - pt.Time.DayOfWeek;
 							if (deltaDays > 0) {
 								deltaDays -= 7;
 							}
-							var week = p0.Time.Date.AddDays(deltaDays);
+							var week = pt.Time.Date.AddDays(deltaDays);
 							if (WeeklyStats.ContainsKey(week)) {
 								weeklyStats = WeeklyStats[week];
 							} else {
 								WeeklyStats[week] = weeklyStats = new RunStatistics(_heartRateZones, _paceZones);
 								weeklyStats.StartTime = week;
 							}
-							runStats.StartTime = p0.Time;
+							runStats.StartTime = pt.Time;
 							runStats.Runs++;
 							monthlyStats.Runs++;
 							weeklyStats.Runs++;
 							firstPoint = false;
 						}
-						runStats.SetStartPoint(p0);
-						monthlyStats.SetStartPoint(p0);
-						weeklyStats.SetStartPoint(p0);
+						runStats.SetStartPoint(pt);
+						monthlyStats.SetStartPoint(pt);
+						weeklyStats.SetStartPoint(pt);
 						while (iterator.MoveNext()) {
-							var pt = iterator.Current;
+							pt = iterator.Current;
 							runStats.RecordInterval(pt);
 							monthlyStats.RecordInterval(pt);
 							weeklyStats.RecordInterval(pt);
-							p0 = pt;
 						}
 					}
 				}

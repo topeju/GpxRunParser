@@ -5,7 +5,7 @@ namespace GpxRunParser
 	public class RunInfo
 	{
 		public string FileName { get; set; }
-		public DateTime StartTime { get; set; }
+		public DateTime StartTime { get; private set; }
 		public TimeSpan Duration { get; set; }
 		public double DistanceInKm { get; set; }
 

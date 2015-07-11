@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using GpxRunParser.Charts;
 using GpxRunParser.Charts.Distance;
 using GpxRunParser.Charts.Time;
 using NDesk.Options;
@@ -19,15 +19,9 @@ namespace GpxRunParser
 		private static void Main(string[] args)
 		{
 			var dirName = "";
-			var filePattern = "*.gpx";
-			var zoneStr = "120,140,173,182";
-			var paceBinStr = "8:45,7:15,6:10";
 			var help = false;
 			var opts = new OptionSet {
 				{ "d|dir=", "Directory with GPX files to parse", s => dirName = s },
-				{ "f|files=", "File name pattern to match, default is *.gpx", s => filePattern = s },
-				{ "z|zones=", "Heart rate zone limits, comma-separated", s => zoneStr = s },
-				{ "p|paces=", "Pace bin limits, comma-separated mm:ss", s => paceBinStr = s },
 				{ "h|?|help", "Show this help text", s => help = s != null }
 			};
 			try {
@@ -41,8 +35,8 @@ namespace GpxRunParser
 			}
 			if (help) {
 				Console.Out.WriteLine("Usage: GpxRunParser [OPTIONS]+");
-				Console.Out.WriteLine(
-									  "Parses the GPX files in the directory specified using the -d option to calculate statistics on the files.");
+				Console.Out.WriteLine("Parses the GPX files in the directory specified using the -d option to");
+				Console.Out.WriteLine("calculate statistics on the files.");
 				opts.WriteOptionDescriptions(Console.Out);
 				return;
 			}
@@ -50,10 +44,10 @@ namespace GpxRunParser
 				Console.Error.WriteLine("Input directory not specified");
 				return;
 			}
-			var zones = (from zone in zoneStr.Split(',')
+			var zones = (from zone in ConfigurationManager.AppSettings["HeartRateZones"].Split(',')
 						 select double.Parse(zone, CultureInfo.InvariantCulture)).ToArray();
 			var paces =
-				(from paceStr in paceBinStr.Split(',')
+				(from paceStr in ConfigurationManager.AppSettings["PaceBins"].Split(',')
 				 select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1]))).ToArray();
 
 			var analyzer = new RunAnalyzer(zones, paces);
@@ -68,7 +62,7 @@ namespace GpxRunParser
 			}
 
 			var extRegexp = new Regex(@"\.gpx$", RegexOptions.IgnoreCase);
-			var gpxFiles = Directory.EnumerateFiles(dirName, filePattern);
+			var gpxFiles = Directory.EnumerateFiles(dirName, ConfigurationManager.AppSettings["FilePattern"]);
 
 			var runs = new List<RunInfo>();
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Linq;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -15,7 +16,7 @@ namespace GpxRunParser.Charts.Distance
 
 		public override void Draw()
 		{
-			if (!_stats.ElevationLog.Any()) {
+			if (!Stats.ElevationLog.Any()) {
 				return;
 			}
 			var elevationSeries = new LineSeries { Title = "Elevation", Color = OxyColors.Brown, YAxisKey = "Elevation", Smooth = false };
@@ -36,20 +37,20 @@ namespace GpxRunParser.Charts.Distance
 			var maximumElevation = double.MinValue;
 			var minimumSlope = double.MaxValue;
 			var maximumSlope = double.MinValue;
-			foreach (var time in _stats.DistanceLog.Keys) {
-				if (!_stats.ElevationLog.ContainsKey(time)) {
+			foreach (var time in Stats.DistanceLog.Keys) {
+				if (!Stats.ElevationLog.ContainsKey(time)) {
 					continue;
 				}
-				var elev = _stats.ElevationLog[time];
-				elevationSeries.Points.Add(new DataPoint(_stats.DistanceLog[time], elev));
+				var elev = Stats.ElevationLog[time];
+				elevationSeries.Points.Add(new DataPoint(Stats.DistanceLog[time], elev));
 				if (elev < minimumElevation) {
 					minimumElevation = elev;
 				}
 				if (elev > maximumElevation) {
 					maximumElevation = elev;
 				}
-				var slope = _stats.SlopeLog[time];
-				slopeSeries.Points.Add(new DataPoint(_stats.DistanceLog[time], slope));
+				var slope = Stats.SlopeLog[time];
+				slopeSeries.Points.Add(new DataPoint(Stats.DistanceLog[time], slope));
 				if (slope < minimumSlope) {
 					minimumSlope = slope;
 				}
@@ -59,12 +60,13 @@ namespace GpxRunParser.Charts.Distance
 			}
 			elevationAxis.Minimum = minimumElevation;
 			elevationAxis.Maximum = maximumElevation;
-			slopeAxis.Minimum = Math.Max(minimumSlope, -60.0D);
-			slopeAxis.Maximum = Math.Min(maximumSlope, 60.0D);
-			_chart.Axes.Add(slopeAxis);
-			_chart.Series.Add(slopeSeries);
-			_chart.Axes.Add(elevationAxis);
-			_chart.Series.Add(elevationSeries);
+			var maximumDisplayedSlope = double.Parse(ConfigurationManager.AppSettings["MaximumDisplayedSlope"]);
+			slopeAxis.Minimum = Math.Max(minimumSlope, -maximumDisplayedSlope);
+			slopeAxis.Maximum = Math.Min(maximumSlope, maximumDisplayedSlope);
+			Chart.Axes.Add(slopeAxis);
+			Chart.Series.Add(slopeSeries);
+			Chart.Axes.Add(elevationAxis);
+			Chart.Series.Add(elevationSeries);
 		}
 	}
 }

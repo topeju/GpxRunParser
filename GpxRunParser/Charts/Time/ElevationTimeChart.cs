@@ -1,4 +1,5 @@
 using System;
+using System.Configuration;
 using System.Linq;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -15,7 +16,7 @@ namespace GpxRunParser.Charts.Time
 
 		public override void Draw()
 		{
-			if (!_stats.ElevationLog.Any()) {
+			if (!Stats.ElevationLog.Any()) {
 				return;
 			}
 			var elevationSeries = new LineSeries { Title = "Elevation", Color = OxyColors.Brown, YAxisKey = "Elevation", Smooth = false };
@@ -36,8 +37,8 @@ namespace GpxRunParser.Charts.Time
 			var maximumElevation = double.MinValue;
 			var minimumSlope = double.MaxValue;
 			var maximumSlope = double.MinValue;
-			foreach (var time in _stats.ElevationLog.Keys) {
-				var elev = _stats.ElevationLog[time];
+			foreach (var time in Stats.ElevationLog.Keys) {
+				var elev = Stats.ElevationLog[time];
 				elevationSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), elev));
 				if (elev < minimumElevation) {
 					minimumElevation = elev;
@@ -45,7 +46,7 @@ namespace GpxRunParser.Charts.Time
 				if (elev > maximumElevation) {
 					maximumElevation = elev;
 				}
-				var slope = _stats.SlopeLog[time];
+				var slope = Stats.SlopeLog[time];
 				slopeSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), slope));
 				if (slope < minimumSlope) {
 					minimumSlope = slope;
@@ -56,12 +57,13 @@ namespace GpxRunParser.Charts.Time
 			}
 			elevationAxis.Minimum = minimumElevation;
 			elevationAxis.Maximum = maximumElevation;
-			slopeAxis.Minimum = Math.Max(minimumSlope, -60.0D);
-			slopeAxis.Maximum = Math.Min(maximumSlope, 60.0D);
-			_chart.Axes.Add(slopeAxis);
-			_chart.Series.Add(slopeSeries);
-			_chart.Axes.Add(elevationAxis);
-			_chart.Series.Add(elevationSeries);
+			var maximumDisplayedSlope = double.Parse(ConfigurationManager.AppSettings["MaximumDisplayedSlope"]);
+			slopeAxis.Minimum = Math.Max(minimumSlope, -maximumDisplayedSlope);
+			slopeAxis.Maximum = Math.Min(maximumSlope, maximumDisplayedSlope);
+			Chart.Axes.Add(slopeAxis);
+			Chart.Series.Add(slopeSeries);
+			Chart.Axes.Add(elevationAxis);
+			Chart.Series.Add(elevationSeries);
 		}
 	}
 }

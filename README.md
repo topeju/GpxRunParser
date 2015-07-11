@@ -3,8 +3,8 @@
 
 A simple console application which parses GPX 1.1 files that have heart rate and possibly cadence information, and outputs statistics on the file, based on heart rate zones etc. The application is simple to run e.g. using a file system based trigger that watches a directory and then launches GpxRunParser to analyze the GPX files when a new one is found.
 
-Current features
-----------------
+Features
+--------
 
 * Parses all GPX files in a directory and outputs statistics in simple HTML files beside each GPX file.
 * Creates an index page that links each of the HTML files.
@@ -15,10 +15,4 @@ Current features
 * Produces weekly and monthly statistics as well as statistics on each individual run. (Charts and maps are only generated for individual runs.)
 
 
-Planned features
-----------------
-
-* Use config file for application settings instead of command line options and hard-coded values
-* Add more information to the maps for each run, with color-coding by pace or heart rate.
-* Include rough maps in the weekly and monthly statistics (possibly only the starting locations?)
-
+Planned features can be found on the Issues page on [GitHub](https://github.com/topeju/GpxRunParser)

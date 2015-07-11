@@ -14,23 +14,19 @@ namespace GpxRunParser.Charts.Distance
 
 		public override void Draw()
 		{
-			if (!_stats.CadenceLog.Any()) {
+			if (!Stats.CadenceLog.Any()) {
 				return;
 			}
-			var series = new LineSeries();
-			series.Title = "Cadence";
-			series.Color = OxyColors.Green;
-			series.Smooth = false;
-			var yAxis = new LinearAxis();
-			yAxis.Position = AxisPosition.Left;
+			var series = new LineSeries { Title = "Cadence", Color = OxyColors.Green, Smooth = false };
+			var yAxis = new LinearAxis { Position = AxisPosition.Left };
 			var minCadence = double.MaxValue;
 			var maxCadence = double.MinValue;
-			foreach (var time in _stats.DistanceLog.Keys) {
-				if (!_stats.CadenceLog.ContainsKey(time)) {
+			foreach (var time in Stats.DistanceLog.Keys) {
+				if (!Stats.CadenceLog.ContainsKey(time)) {
 					continue;
 				}
-				var cadence = _stats.CadenceLog[time];
-				series.Points.Add(new DataPoint(_stats.DistanceLog[time], cadence));
+				var cadence = Stats.CadenceLog[time];
+				series.Points.Add(new DataPoint(Stats.DistanceLog[time], cadence));
 				if (cadence < minCadence) {
 					minCadence = cadence;
 				}
@@ -44,8 +40,8 @@ namespace GpxRunParser.Charts.Distance
 			yAxis.MajorGridlineThickness = 1.0;
 			yAxis.MinorGridlineStyle = LineStyle.Dot;
 			yAxis.MinorGridlineThickness = 1.0;
-			_chart.Axes.Add(yAxis);
-			_chart.Series.Add(series);
+			Chart.Axes.Add(yAxis);
+			Chart.Series.Add(series);
 		}
 	}
 }

@@ -8,35 +8,35 @@ namespace GpxRunParser.Charts.Distance
 {
 	public abstract class DistanceChartBase
 	{
-		protected PlotModel _chart;
-		protected Axis _xAxis;
-		protected string _baseFileName;
-		protected RunStatistics _stats;
+		protected readonly PlotModel Chart;
+		protected readonly Axis XAxis;
+		protected readonly string BaseFileName;
+		protected readonly RunStatistics Stats;
 
 		public DistanceChartBase(string baseBaseFileName, RunStatistics stats)
 		{
-			_baseFileName = baseBaseFileName;
-			_stats = stats;
+			BaseFileName = baseBaseFileName;
+			Stats = stats;
 
-			_chart = new PlotModel();
+			Chart = new PlotModel();
 
-			_xAxis = new LinearAxis {
+			XAxis = new LinearAxis {
 				Position = AxisPosition.Bottom,
 				Minimum = 0,
-				Maximum = _stats.TotalDistanceInKm,
+				Maximum = Stats.TotalDistanceInKm,
 				ExtraGridlineStyle = LineStyle.Solid,
-				ExtraGridlineColor = OxyColors.DimGray
+				ExtraGridlineColor = OxyColors.DimGray,
+				ExtraGridlines = Stats.Pauses.Select(p => Stats.DistanceLog[p.PauseEnd.Time]).ToArray()
 			};
-			_xAxis.ExtraGridlines = _stats.Pauses.Select(p => _stats.DistanceLog[p.PauseEnd.Time]).ToArray();
-			_chart.Axes.Add(_xAxis);
-			_chart.LegendPosition = LegendPosition.BottomRight;
+			Chart.Axes.Add(XAxis);
+			Chart.LegendPosition = LegendPosition.BottomRight;
 		}
 
 		public abstract void Draw();
 
 		public void SavePng()
 		{
-			PngExporter.Export(_chart, _baseFileName + "_dist.png", 900, 500, Brushes.White);
+			PngExporter.Export(Chart, BaseFileName + "_dist.png", 900, 500, Brushes.White);
 		}
 	}
 }

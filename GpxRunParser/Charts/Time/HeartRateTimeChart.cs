@@ -1,10 +1,9 @@
 using System.Linq;
-using GpxRunParser.Charts.Time;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
-namespace GpxRunParser.Charts
+namespace GpxRunParser.Charts.Time
 {
 	public class HeartRateTimeChart : TimeChartBase
 	{
@@ -13,7 +12,7 @@ namespace GpxRunParser.Charts
 		{
 		}
 
-		private static readonly OxyColor[][] palette = {
+		private static readonly OxyColor[][] Palette = {
 			new[] { OxyColors.White }, // no zones defined
 			new[] { OxyColors.Green, OxyColors.Red }, // 1 zone boundary
 			new[] { OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 2 zone boundaries
@@ -23,13 +22,10 @@ namespace GpxRunParser.Charts
 
 		public override void Draw()
 		{
-			if (!_stats.HeartRateLog.Any()) {
+			if (!Stats.HeartRateLog.Any()) {
 				return;
 			}
-			var series = new LineSeries();
-			series.Title = "Heart Rate";
-			series.Color = OxyColors.Red;
-			series.Smooth = false;
+			var series = new LineSeries { Title = "Heart Rate", Color = OxyColors.Red, Smooth = false };
 			var yAxis = new RangeColorAxis {
 				Position = AxisPosition.Left,
 				MajorGridlineStyle = LineStyle.Solid,
@@ -42,8 +38,8 @@ namespace GpxRunParser.Charts
 			};
 			var minHr = double.MaxValue;
 			var maxHr = double.MinValue;
-			foreach (var time in _stats.HeartRateLog.Keys) {
-				var hr = _stats.HeartRateLog[time];
+			foreach (var time in Stats.HeartRateLog.Keys) {
+				var hr = Stats.HeartRateLog[time];
 				series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), hr));
 				if (hr < minHr) {
 					minHr = hr;
@@ -54,18 +50,18 @@ namespace GpxRunParser.Charts
 			}
 			yAxis.Minimum = minHr;
 			yAxis.Maximum = maxHr;
-			yAxis.ExtraGridlines = _stats.ZoneBins.Bins.ToArray();
-			var paletteIndex = _stats.ZoneBins.Bins.Count();
+			yAxis.ExtraGridlines = Stats.ZoneBins.Bins.ToArray();
+			var paletteIndex = Stats.ZoneBins.Bins.Count();
 			var lower = 0.0;
 			var index = 0;
-			foreach (var zoneLimit in _stats.ZoneBins.Bins) {
-				yAxis.AddRange(lower, zoneLimit, palette[paletteIndex][index]);
+			foreach (var zoneLimit in Stats.ZoneBins.Bins) {
+				yAxis.AddRange(lower, zoneLimit, Palette[paletteIndex][index]);
 				lower = zoneLimit;
 				index++;
 			}
-			yAxis.AddRange(lower, double.MaxValue, palette[paletteIndex][index]);
-			_chart.Axes.Add(yAxis);
-			_chart.Series.Add(series);
+			yAxis.AddRange(lower, double.MaxValue, Palette[paletteIndex][index]);
+			Chart.Axes.Add(yAxis);
+			Chart.Series.Add(series);
 		}
 	}
 }

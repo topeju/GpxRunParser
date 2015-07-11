@@ -8,26 +8,26 @@ namespace GpxRunParser.Charts.Time
 {
 	public abstract class TimeChartBase
 	{
-		protected PlotModel _chart;
-		protected Axis _xAxis;
-		protected string _baseFileName;
-		protected RunStatistics _stats;
+		protected readonly PlotModel Chart;
+		protected readonly Axis XAxis;
+		protected readonly string BaseFileName;
+		protected readonly RunStatistics Stats;
 
-		public TimeChartBase(string baseBaseFileName, RunStatistics stats)
+		protected TimeChartBase(string baseBaseFileName, RunStatistics stats)
 		{
-			_baseFileName = baseBaseFileName;
-			_stats = stats;
+			BaseFileName = baseBaseFileName;
+			Stats = stats;
 
-			_chart = new PlotModel();
+			Chart = new PlotModel();
 
-			_xAxis = new DateTimeAxis {
+			XAxis = new DateTimeAxis {
 				Position = AxisPosition.Bottom,
-				Minimum = DateTimeAxis.ToDouble(_stats.StartTime),
-				Maximum = DateTimeAxis.ToDouble(_stats.EndTime),
+				Minimum = DateTimeAxis.ToDouble(Stats.StartTime),
+				Maximum = DateTimeAxis.ToDouble(Stats.EndTime),
 				StringFormat = "HH:mm"
 			};
-			_chart.Axes.Add(_xAxis);
-			_chart.LegendPosition = LegendPosition.BottomRight;
+			Chart.Axes.Add(XAxis);
+			Chart.LegendPosition = LegendPosition.BottomRight;
 		}
 
 		public abstract void Draw();
@@ -47,20 +47,20 @@ namespace GpxRunParser.Charts.Time
 				Key = "Secondary",
 				IsAxisVisible = false
 			};
-			foreach (var pause in _stats.Pauses) {
+			foreach (var pause in Stats.Pauses) {
 				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseStart.Time), 0.0));
 				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseStart.Time), 1.0));
 				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseEnd.Time), 1.0));
 				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseEnd.Time), 0.0));
 			}
-			_chart.Axes.Add(secondYAxis);
-			_chart.Series.Add(pauseSeries);
+			Chart.Axes.Add(secondYAxis);
+			Chart.Series.Add(pauseSeries);
 		}
 
 		public void SavePng()
 		{
 			AddPauseSeries(); // Needs to be added last so it shows up in the background
-			PngExporter.Export(_chart, _baseFileName + ".png", 900, 500, Brushes.White);
+			PngExporter.Export(Chart, BaseFileName + ".png", 900, 500, Brushes.White);
 		}
 	}
 }
