@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using OxyPlot.WindowsForms;
-using System.IO;
 
 namespace GpxRunParser
 {
@@ -41,8 +36,19 @@ namespace GpxRunParser
 
 		private void AddPauseSeries()
 		{
-			var pauseSeries = new AreaSeries { Title = "Paused", Color = OxyColors.DimGray, LineStyle = LineStyle.None, YAxisKey = "Secondary" };
-			var secondYAxis = new LinearAxis { Position = AxisPosition.Right, Minimum = 0.0, Maximum = 1.0, Key = "Secondary", IsAxisVisible = false };
+			var pauseSeries = new AreaSeries {
+				Title = "Paused",
+				Color = OxyColors.DimGray,
+				LineStyle = LineStyle.None,
+				YAxisKey = "Secondary"
+			};
+			var secondYAxis = new LinearAxis {
+				Position = AxisPosition.Right,
+				Minimum = 0.0,
+				Maximum = 1.0,
+				Key = "Secondary",
+				IsAxisVisible = false
+			};
 			foreach (var pause in _stats.Pauses) {
 				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseStart.Time), 0.0));
 				pauseSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(pause.PauseStart.Time), 1.0));
@@ -58,7 +64,6 @@ namespace GpxRunParser
 			AddPauseSeries(); // Needs to be added last so it shows up in the background
 			PngExporter.Export(_chart, _baseFileName + ".png", 900, 500, Brushes.White);
 		}
-
 	}
 
 	public class HeartRateChart : GraphBase
@@ -68,12 +73,12 @@ namespace GpxRunParser
 		{
 		}
 
-		private static readonly OxyColor[][] palette = new OxyColor[][] { 
-			new OxyColor[] { OxyColors.White }, // no zones defined
-			new OxyColor[] { OxyColors.Green, OxyColors.Red }, // 1 zone boundary
-			new OxyColor[] { OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 2 zone boundaries
-			new OxyColor[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 3 zone boundaries
-			new OxyColor[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Orange, OxyColors.Red } // 4 zone boundaries
+		private static readonly OxyColor[][] palette = {
+			new[] { OxyColors.White }, // no zones defined
+			new[] { OxyColors.Green, OxyColors.Red }, // 1 zone boundary
+			new[] { OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 2 zone boundaries
+			new[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 3 zone boundaries
+			new[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Orange, OxyColors.Red } // 4 zone boundaries
 		};
 
 		public override void Draw()
@@ -95,15 +100,17 @@ namespace GpxRunParser
 				ExtraGridlineStyle = LineStyle.Solid,
 				ExtraGridlineThickness = 1.5,
 			};
-			double minHr = double.MaxValue;
-			double maxHr = double.MinValue;
+			var minHr = double.MaxValue;
+			var maxHr = double.MinValue;
 			foreach (var time in _stats.HeartRateLog.Keys) {
 				var hr = _stats.HeartRateLog[time];
 				series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), hr));
-				if (hr < minHr)
+				if (hr < minHr) {
 					minHr = hr;
-				if (hr > maxHr)
+				}
+				if (hr > maxHr) {
 					maxHr = hr;
+				}
 			}
 			yAxis.Minimum = minHr;
 			yAxis.Maximum = maxHr;
@@ -140,15 +147,17 @@ namespace GpxRunParser
 			series.Smooth = false;
 			var yAxis = new LinearAxis();
 			yAxis.Position = AxisPosition.Left;
-			double minCadence = double.MaxValue;
-			double maxCadence = double.MinValue;
+			var minCadence = double.MaxValue;
+			var maxCadence = double.MinValue;
 			foreach (var time in _stats.HeartRateLog.Keys) {
 				var cadence = _stats.CadenceLog[time];
 				series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), cadence));
-				if (cadence < minCadence)
+				if (cadence < minCadence) {
 					minCadence = cadence;
-				if (cadence > maxCadence)
+				}
+				if (cadence > maxCadence) {
 					maxCadence = cadence;
+				}
 			}
 			yAxis.Minimum = minCadence;
 			yAxis.Maximum = maxCadence;
@@ -197,10 +206,12 @@ namespace GpxRunParser
 				var pace = _stats.PaceLog[time];
 				if (pace < slowestDisplayedPace) {
 					series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), TimeSpanAxis.ToDouble(pace)));
-					if (pace > slowestPace)
+					if (pace > slowestPace) {
 						slowestPace = pace;
-					if (pace < fastestPace)
+					}
+					if (pace < fastestPace) {
 						fastestPace = pace;
+					}
 				}
 			}
 			if (slowestPace > slowestDisplayedPace) {
@@ -227,7 +238,7 @@ namespace GpxRunParser
 				return;
 			}
 			var elevationSeries = new LineSeries { Title = "Elevation", Color = OxyColors.Brown, YAxisKey = "Elevation", Smooth = false };
-			var slopeSeries = new LineSeries { Title = "Slope", Color = OxyColors.Blue, YAxisKey = "Slope", Smooth = false }; 
+			var slopeSeries = new LineSeries { Title = "Slope", Color = OxyColors.Blue, YAxisKey = "Slope", Smooth = false };
 			var elevationAxis = new LinearAxis {
 				Position = AxisPosition.Left,
 				MajorGridlineStyle = LineStyle.Solid,
@@ -247,16 +258,20 @@ namespace GpxRunParser
 			foreach (var time in _stats.ElevationLog.Keys) {
 				var elev = _stats.ElevationLog[time];
 				elevationSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), elev));
-				if (elev < minimumElevation)
+				if (elev < minimumElevation) {
 					minimumElevation = elev;
-				if (elev > maximumElevation)
+				}
+				if (elev > maximumElevation) {
 					maximumElevation = elev;
+				}
 				var slope = _stats.SlopeLog[time];
 				slopeSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(time), slope));
-				if (slope < minimumSlope)
+				if (slope < minimumSlope) {
 					minimumSlope = slope;
-				if (slope > maximumSlope)
+				}
+				if (slope > maximumSlope) {
 					maximumSlope = slope;
+				}
 			}
 			elevationAxis.Minimum = minimumElevation;
 			elevationAxis.Maximum = maximumElevation;
@@ -301,7 +316,6 @@ namespace GpxRunParser
 		{
 			PngExporter.Export(_chart, _baseFileName + "_dist.png", 900, 500, Brushes.White);
 		}
-
 	}
 
 	public class HeartRateDistanceChart : DistanceGraphBase
@@ -311,12 +325,12 @@ namespace GpxRunParser
 		{
 		}
 
-		private static readonly OxyColor[][] palette = new OxyColor[][] { 
-			new OxyColor[] { OxyColors.White }, // no zones defined
-			new OxyColor[] { OxyColors.Green, OxyColors.Red }, // 1 zone boundary
-			new OxyColor[] { OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 2 zone boundaries
-			new OxyColor[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 3 zone boundaries
-			new OxyColor[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Orange, OxyColors.Red } // 4 zone boundaries
+		private static readonly OxyColor[][] palette = {
+			new[] { OxyColors.White }, // no zones defined
+			new[] { OxyColors.Green, OxyColors.Red }, // 1 zone boundary
+			new[] { OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 2 zone boundaries
+			new[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Red }, // 3 zone boundaries
+			new[] { OxyColors.LightGray, OxyColors.Green, OxyColors.Yellow, OxyColors.Orange, OxyColors.Red } // 4 zone boundaries
 		};
 
 		public override void Draw()
@@ -338,17 +352,20 @@ namespace GpxRunParser
 				ExtraGridlineStyle = LineStyle.Solid,
 				ExtraGridlineThickness = 1.5,
 			};
-			double minHr = double.MaxValue;
-			double maxHr = double.MinValue;
+			var minHr = double.MaxValue;
+			var maxHr = double.MinValue;
 			foreach (var time in _stats.DistanceLog.Keys) {
-				if (!_stats.HeartRateLog.ContainsKey(time))
+				if (!_stats.HeartRateLog.ContainsKey(time)) {
 					continue;
+				}
 				var hr = _stats.HeartRateLog[time];
 				series.Points.Add(new DataPoint(_stats.DistanceLog[time], hr));
-				if (hr < minHr)
+				if (hr < minHr) {
 					minHr = hr;
-				if (hr > maxHr)
+				}
+				if (hr > maxHr) {
 					maxHr = hr;
+				}
 			}
 			yAxis.Minimum = minHr;
 			yAxis.Maximum = maxHr;
@@ -385,17 +402,20 @@ namespace GpxRunParser
 			series.Smooth = false;
 			var yAxis = new LinearAxis();
 			yAxis.Position = AxisPosition.Left;
-			double minCadence = double.MaxValue;
-			double maxCadence = double.MinValue;
+			var minCadence = double.MaxValue;
+			var maxCadence = double.MinValue;
 			foreach (var time in _stats.DistanceLog.Keys) {
-				if (!_stats.CadenceLog.ContainsKey(time))
+				if (!_stats.CadenceLog.ContainsKey(time)) {
 					continue;
+				}
 				var cadence = _stats.CadenceLog[time];
 				series.Points.Add(new DataPoint(_stats.DistanceLog[time], cadence));
-				if (cadence < minCadence)
+				if (cadence < minCadence) {
 					minCadence = cadence;
-				if (cadence > maxCadence)
+				}
+				if (cadence > maxCadence) {
 					maxCadence = cadence;
+				}
 			}
 			yAxis.Minimum = minCadence;
 			yAxis.Maximum = maxCadence;
@@ -441,15 +461,18 @@ namespace GpxRunParser
 			var slowestPace = TimeSpan.MinValue;
 			var fastestPace = TimeSpan.MaxValue;
 			foreach (var time in _stats.DistanceLog.Keys) {
-				if (!_stats.PaceLog.ContainsKey(time))
+				if (!_stats.PaceLog.ContainsKey(time)) {
 					continue;
+				}
 				var pace = _stats.PaceLog[time];
 				if (pace < slowestDisplayedPace) {
 					series.Points.Add(new DataPoint(_stats.DistanceLog[time], TimeSpanAxis.ToDouble(pace)));
-					if (pace > slowestPace)
+					if (pace > slowestPace) {
 						slowestPace = pace;
-					if (pace < fastestPace)
+					}
+					if (pace < fastestPace) {
 						fastestPace = pace;
+					}
 				}
 			}
 			if (slowestPace > slowestDisplayedPace) {
@@ -476,7 +499,7 @@ namespace GpxRunParser
 				return;
 			}
 			var elevationSeries = new LineSeries { Title = "Elevation", Color = OxyColors.Brown, YAxisKey = "Elevation", Smooth = false };
-			var slopeSeries = new LineSeries { Title = "Slope", Color = OxyColors.Blue, YAxisKey = "Slope", Smooth = false }; 
+			var slopeSeries = new LineSeries { Title = "Slope", Color = OxyColors.Blue, YAxisKey = "Slope", Smooth = false };
 			var elevationAxis = new LinearAxis {
 				Position = AxisPosition.Left,
 				MajorGridlineStyle = LineStyle.Solid,
@@ -494,20 +517,25 @@ namespace GpxRunParser
 			var minimumSlope = double.MaxValue;
 			var maximumSlope = double.MinValue;
 			foreach (var time in _stats.DistanceLog.Keys) {
-				if (!_stats.ElevationLog.ContainsKey(time))
+				if (!_stats.ElevationLog.ContainsKey(time)) {
 					continue;
+				}
 				var elev = _stats.ElevationLog[time];
 				elevationSeries.Points.Add(new DataPoint(_stats.DistanceLog[time], elev));
-				if (elev < minimumElevation)
+				if (elev < minimumElevation) {
 					minimumElevation = elev;
-				if (elev > maximumElevation)
+				}
+				if (elev > maximumElevation) {
 					maximumElevation = elev;
+				}
 				var slope = _stats.SlopeLog[time];
 				slopeSeries.Points.Add(new DataPoint(_stats.DistanceLog[time], slope));
-				if (slope < minimumSlope)
+				if (slope < minimumSlope) {
 					minimumSlope = slope;
-				if (slope > maximumSlope)
+				}
+				if (slope > maximumSlope) {
 					maximumSlope = slope;
+				}
 			}
 			elevationAxis.Minimum = minimumElevation;
 			elevationAxis.Maximum = maximumElevation;
@@ -519,5 +547,4 @@ namespace GpxRunParser
 			_chart.Series.Add(elevationSeries);
 		}
 	}
-
 }

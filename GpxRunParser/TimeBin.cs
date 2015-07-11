@@ -25,7 +25,9 @@ namespace GpxRunParser
 		public void Record(T value, TimeSpan time)
 		{
 			var i = Bins.Length - 1;
-			while (i >= 0 && Bins[i].CompareTo(value) > 0) i--;
+			while (i >= 0 && Bins[i].CompareTo(value) > 0) {
+				i--;
+			}
 			Values[i + 1] += time;
 		}
 	}

@@ -7,11 +7,11 @@ namespace GpxRunParser
 {
 	public class RunAnalyzer
 	{
-		private double[] _heartRateZones;
-		private TimeSpan[] _paceZones;
+		private readonly double[] _heartRateZones;
+		private readonly TimeSpan[] _paceZones;
 
-		public IDictionary<DateTime,RunStatistics> WeeklyStats { get; private set; }
-		public IDictionary<DateTime,RunStatistics> MonthlyStats { get; private set; }
+		public IDictionary<DateTime, RunStatistics> WeeklyStats { get; private set; }
+		public IDictionary<DateTime, RunStatistics> MonthlyStats { get; private set; }
 
 		public RunAnalyzer(double[] heartRateZones, TimeSpan[] paceZones)
 		{
@@ -34,7 +34,7 @@ namespace GpxRunParser
 			foreach (var track in gpxDoc.Descendants(gpxNamespace + "trk")) {
 				foreach (var segment in track.Descendants(gpxNamespace + "trkseg")) {
 					var points = from point in segment.Descendants(gpxNamespace + "trkpt")
-						select new GpxTrackPoint(point);
+								 select new GpxTrackPoint(point);
 					var iterator = points.GetEnumerator();
 					if (iterator.MoveNext()) {
 						var p0 = iterator.Current;
@@ -46,7 +46,7 @@ namespace GpxRunParser
 								MonthlyStats[month] = monthlyStats = new RunStatistics(_heartRateZones, _paceZones);
 								monthlyStats.StartTime = month;
 							}
-							int deltaDays = DayOfWeek.Monday - p0.Time.DayOfWeek;
+							var deltaDays = DayOfWeek.Monday - p0.Time.DayOfWeek;
 							if (deltaDays > 0) {
 								deltaDays -= 7;
 							}
@@ -81,4 +81,3 @@ namespace GpxRunParser
 		}
 	}
 }
-

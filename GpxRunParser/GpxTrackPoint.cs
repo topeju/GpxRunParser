@@ -25,17 +25,25 @@ namespace GpxRunParser
 			Latitude = double.Parse(element.Attribute("lat").Value, CultureInfo.InvariantCulture);
 			Longitude = double.Parse(element.Attribute("lon").Value, CultureInfo.InvariantCulture);
 			var elevElem = element.Element(gpxNamespace + "ele");
-			if (elevElem != null) Elevation = double.Parse(elevElem.Value, CultureInfo.InvariantCulture);
+			if (elevElem != null) {
+				Elevation = double.Parse(elevElem.Value, CultureInfo.InvariantCulture);
+			}
 			var timeElem = element.Element(gpxNamespace + "time");
-			if (timeElem != null) Time = DateTime.Parse(timeElem.Value, CultureInfo.InvariantCulture);
+			if (timeElem != null) {
+				Time = DateTime.Parse(timeElem.Value, CultureInfo.InvariantCulture);
+			}
 			var extElem = element.Element(gpxNamespace + "extensions");
 			if (extElem != null) {
 				var trackPointExtElem = extElem.Element(gpxTrackPointNamespace + "TrackPointExtension");
 				if (trackPointExtElem != null) {
 					var hrElem = trackPointExtElem.Element(gpxTrackPointNamespace + "hr");
-					if (hrElem != null) HeartRate = double.Parse(hrElem.Value, CultureInfo.InvariantCulture);
+					if (hrElem != null) {
+						HeartRate = double.Parse(hrElem.Value, CultureInfo.InvariantCulture);
+					}
 					var cadenceElem = trackPointExtElem.Element(gpxTrackPointNamespace + "cad");
-					if (cadenceElem != null) Cadence = double.Parse(cadenceElem.Value, CultureInfo.InvariantCulture);
+					if (cadenceElem != null) {
+						Cadence = double.Parse(cadenceElem.Value, CultureInfo.InvariantCulture);
+					}
 				}
 			}
 		}

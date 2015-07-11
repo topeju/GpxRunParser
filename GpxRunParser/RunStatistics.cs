@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using GpxRunParser;
 
 public class RunStatistics
@@ -63,7 +61,8 @@ public class RunStatistics
 	public IDictionary<DateTime, double> SlopeLog { get; set; }
 	public IDictionary<DateTime, double> DistanceLog { get; set; }
 
-	public class PauseInfo {
+	public class PauseInfo
+	{
 		public GpxTrackPoint PauseStart { get; set; }
 		public GpxTrackPoint PauseEnd { get; set; }
 	}
@@ -87,7 +86,7 @@ public class RunStatistics
 	private readonly PointIntervalData[] _lastIntervals = new PointIntervalData[AveragingPeriod];
 	private int _latestPointOffset = -1;
 	private int _earliestPointOffset = -1;
-	private int _bufferCount = 0;
+	private int _bufferCount;
 
 	public RunStatistics(double[] zones, TimeSpan[] paces)
 	{
@@ -150,7 +149,9 @@ public class RunStatistics
 		// Δ45, Δ56, Δ67, Δ78 (latest = 3, earliest = 0)
 		// Δ89, Δ56, Δ67, Δ78 (latest = 0, earliest = 1)
 		_latestPointOffset++;
-		if (_bufferCount < AveragingPeriod) _bufferCount++;
+		if (_bufferCount < AveragingPeriod) {
+			_bufferCount++;
+		}
 		if (_latestPointOffset >= AveragingPeriod) {
 			_latestPointOffset = 0;
 		}
@@ -170,8 +171,8 @@ public class RunStatistics
 		var dist = _lastPoint.DistanceTo(point);
 		var deltaT = _lastPoint.TimeDifference(point);
 
-		double averagedDistance = 0.0;
-		double averagedClimb = 0.0;
+		var averagedDistance = 0.0;
+		var averagedClimb = 0.0;
 		var averageTime = new TimeSpan(0);
 		for (var i = 0; i < _bufferCount; i++) {
 			averagedDistance += _lastIntervals[i].distance;
@@ -186,7 +187,7 @@ public class RunStatistics
 
 		var averagedPace = new TimeSpan((long) (1000.0D * averageTime.Ticks / averagedDistance));
 		PaceBins.Record(averagedPace, deltaT);
-		if (averagedDistance > 0.0/* && averagedPace < SlowestDisplayedPace*/) {
+		if (averagedDistance > 0.0 /* && averagedPace < SlowestDisplayedPace*/) {
 			PaceLog[point.Time] = averagedPace;
 		} else {
 			PaceLog[point.Time] = SlowestDisplayedPace; //new TimeSpan(0);
@@ -219,19 +220,24 @@ public class RunStatistics
 	private void RecordRoutePoint(GpxTrackPoint point)
 	{
 		Route.Add(point);
-		if (point.Latitude < MinLatitude)
+		if (point.Latitude < MinLatitude) {
 			MinLatitude = point.Latitude;
-		if (point.Latitude > MaxLatitude)
+		}
+		if (point.Latitude > MaxLatitude) {
 			MaxLatitude = point.Latitude;
-		if (point.Longitude < MinLongitude)
+		}
+		if (point.Longitude < MinLongitude) {
 			MinLongitude = point.Longitude;
-		if (point.Longitude > MaxLongitude)
+		}
+		if (point.Longitude > MaxLongitude) {
 			MaxLongitude = point.Longitude;
+		}
 	}
 
 	public void UpdateMaxHeartRate(double heartRate)
 	{
-		if (heartRate > MaxHeartRate)
+		if (heartRate > MaxHeartRate) {
 			MaxHeartRate = heartRate;
+		}
 	}
 }
