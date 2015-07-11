@@ -59,8 +59,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Charts\Distance\CadenceDistanceChart.cs" />
+    <Compile Include="Charts\Distance\DistanceChartBase.cs" />
+    <Compile Include="Charts\Distance\HeartRateDistanceChart.cs" />
+    <Compile Include="Charts\Distance\PaceDistanceChart.cs" />
+    <Compile Include="Charts\Time\ElevationTimeChart.cs" />
+    <Compile Include="Charts\Time\PaceTimeChart.cs" />
+    <Compile Include="Charts\Time\CadenceTimeChart.cs" />
+    <Compile Include="Charts\Time\TimeChartBase.cs" />
+    <Compile Include="Charts\Time\HeartRateTimeChart.cs" />
     <Compile Include="GpxTrackPoint.cs" />
-    <Compile Include="Graph.cs" />
+    <Compile Include="Charts\Distance\ElevationDistanceChart.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Templates\ModelTemplate.cs" />

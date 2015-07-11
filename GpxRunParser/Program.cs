@@ -5,6 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using GpxRunParser.Charts;
+using GpxRunParser.Charts.Distance;
+using GpxRunParser.Charts.Time;
 using NDesk.Options;
 using RazorEngine;
 using RazorEngine.Templating;
@@ -83,19 +86,19 @@ namespace GpxRunParser
 
 				runs.Add(new RunInfo(outputFileName, runStats));
 
-				var hrChart = new HeartRateChart(baseFileName, runStats);
+				var hrChart = new HeartRateTimeChart(baseFileName, runStats);
 				hrChart.Draw();
 				hrChart.SavePng();
 
-				var paceChart = new PaceChart(baseFileName, runStats);
+				var paceChart = new PaceTimeChart(baseFileName, runStats);
 				paceChart.Draw();
 				paceChart.SavePng();
 
-				var cadenceChart = new CadenceChart(baseFileName, runStats);
+				var cadenceChart = new CadenceTimeChart(baseFileName, runStats);
 				cadenceChart.Draw();
 				cadenceChart.SavePng();
 
-				var elevationChart = new ElevationChart(baseFileName, runStats);
+				var elevationChart = new ElevationTimeChart(baseFileName, runStats);
 				elevationChart.Draw();
 				elevationChart.SavePng();
 
