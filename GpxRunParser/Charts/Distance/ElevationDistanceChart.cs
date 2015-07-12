@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.Linq;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -60,9 +59,8 @@ namespace GpxRunParser.Charts.Distance
 			}
 			elevationAxis.Minimum = minimumElevation;
 			elevationAxis.Maximum = maximumElevation;
-			var maximumDisplayedSlope = double.Parse(ConfigurationManager.AppSettings["MaximumDisplayedSlope"]);
-			slopeAxis.Minimum = Math.Max(minimumSlope, -maximumDisplayedSlope);
-			slopeAxis.Maximum = Math.Min(maximumSlope, maximumDisplayedSlope);
+			slopeAxis.Minimum = Math.Max(minimumSlope, -Settings.MaximumDisplayedSlope);
+			slopeAxis.Maximum = Math.Min(maximumSlope, Settings.MaximumDisplayedSlope);
 			Chart.Axes.Add(slopeAxis);
 			Chart.Series.Add(slopeSeries);
 			Chart.Axes.Add(elevationAxis);

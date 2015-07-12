@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.Linq;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -12,14 +11,7 @@ namespace GpxRunParser.Charts.Distance
 		public PaceDistanceChart(string baseFileName, RunStatistics stats)
 			: base(baseFileName + "_pace", stats)
 		{
-			var slowestPace = ConfigurationManager.AppSettings["SlowestDisplayedPace"].Split(':');
-			var slowH = int.Parse(slowestPace[0]);
-			var slowM = int.Parse(slowestPace[1]);
-			var slowS = double.Parse(slowestPace[2]);
-			_slowestDisplayedPace = new TimeSpan(0, slowH, slowM, (int)slowS, (int)((slowS - (int)slowS) * 1000.0D));
 		}
-
-		private readonly TimeSpan _slowestDisplayedPace;
 
 		public override void Draw()
 		{
@@ -49,7 +41,7 @@ namespace GpxRunParser.Charts.Distance
 					continue;
 				}
 				var pace = Stats.PaceLog[time];
-				if (pace < _slowestDisplayedPace) {
+				if (pace < Settings.SlowestDisplayedPace) {
 					series.Points.Add(new DataPoint(Stats.DistanceLog[time], TimeSpanAxis.ToDouble(pace)));
 					if (pace > slowestPace) {
 						slowestPace = pace;
@@ -59,8 +51,8 @@ namespace GpxRunParser.Charts.Distance
 					}
 				}
 			}
-			if (slowestPace > _slowestDisplayedPace) {
-				slowestPace = _slowestDisplayedPace;
+			if (slowestPace > Settings.SlowestDisplayedPace) {
+				slowestPace = Settings.SlowestDisplayedPace;
 			}
 			yAxis.Minimum = TimeSpanAxis.ToDouble(fastestPace);
 			yAxis.Maximum = TimeSpanAxis.ToDouble(slowestPace);

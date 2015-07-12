@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -44,13 +43,8 @@ namespace GpxRunParser
 				Console.Error.WriteLine("Input directory not specified");
 				return;
 			}
-			var zones = (from zone in ConfigurationManager.AppSettings["HeartRateZones"].Split(',')
-						 select double.Parse(zone, CultureInfo.InvariantCulture)).ToArray();
-			var paces =
-				(from paceStr in ConfigurationManager.AppSettings["PaceBins"].Split(',')
-				 select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1]))).ToArray();
 
-			var analyzer = new RunAnalyzer(zones, paces);
+			var analyzer = new RunAnalyzer(Settings.HeartRateZones, Settings.PaceBins);
 
 			var assembly = Assembly.GetExecutingAssembly();
 			var pageTemplate = "";
@@ -62,7 +56,7 @@ namespace GpxRunParser
 			}
 
 			var extRegexp = new Regex(@"\.gpx$", RegexOptions.IgnoreCase);
-			var gpxFiles = Directory.EnumerateFiles(dirName, ConfigurationManager.AppSettings["FilePattern"]);
+			var gpxFiles = Directory.EnumerateFiles(dirName, Settings.FilePattern);
 
 			var runs = new List<RunInfo>();
 

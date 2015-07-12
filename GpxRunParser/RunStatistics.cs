@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 
 namespace GpxRunParser
 {
@@ -85,9 +84,7 @@ namespace GpxRunParser
 		}
 
 		private GpxTrackPoint _lastPoint;
-		private readonly TimeSpan _slowestDisplayedPace;
 		private readonly PointIntervalData[] _lastIntervals;
-		private readonly int _averagingPeriod;
 		private int _latestPointOffset = -1;
 		private int _earliestPointOffset = -1;
 		private int _bufferCount;
@@ -116,13 +113,7 @@ namespace GpxRunParser
 			MaxLatitude = double.MinValue;
 			MinLongitude = double.MaxValue;
 			MaxLongitude = double.MinValue;
-			_averagingPeriod = int.Parse(ConfigurationManager.AppSettings["AveragingPeriod"]);
-			_lastIntervals = new PointIntervalData[_averagingPeriod];
-			var slowestPace = ConfigurationManager.AppSettings["SlowestDisplayedPace"].Split(':');
-			var slowH = int.Parse(slowestPace[0]);
-			var slowM = int.Parse(slowestPace[1]);
-			var slowS = double.Parse(slowestPace[2]);
-			_slowestDisplayedPace = new TimeSpan(0, slowH, slowM, (int)slowS, (int)((slowS - (int)slowS) * 1000.0D));
+			_lastIntervals = new PointIntervalData[Settings.AveragingPeriod];
 		}
 
 
@@ -158,17 +149,17 @@ namespace GpxRunParser
 			// Δ45, Δ56, Δ67, Δ78 (latest = 3, earliest = 0)
 			// Δ89, Δ56, Δ67, Δ78 (latest = 0, earliest = 1)
 			_latestPointOffset++;
-			if (_bufferCount < _averagingPeriod) {
+			if (_bufferCount < Settings.AveragingPeriod) {
 				_bufferCount++;
 			}
-			if (_latestPointOffset >= _averagingPeriod) {
+			if (_latestPointOffset >= Settings.AveragingPeriod) {
 				_latestPointOffset = 0;
 			}
 			if (_earliestPointOffset < 0) {
 				_earliestPointOffset = 0;
 			} else if (_latestPointOffset == _earliestPointOffset) {
 				_earliestPointOffset++;
-				if (_earliestPointOffset >= _averagingPeriod) {
+				if (_earliestPointOffset >= Settings.AveragingPeriod) {
 					_earliestPointOffset = 0;
 				}
 			}
@@ -196,10 +187,10 @@ namespace GpxRunParser
 
 			var averagedPace = new TimeSpan((long) (1000.0D * averageTime.Ticks / averagedDistance));
 			PaceBins.Record(averagedPace, deltaT);
-			if (averagedDistance > 0.0 /* && averagedPace < SlowestDisplayedPace*/) {
+			if (averagedDistance > 0.0 /* && averagedPace < Settings.SlowestDisplayedPace*/) {
 				PaceLog[point.Time] = averagedPace;
 			} else {
-				PaceLog[point.Time] = _slowestDisplayedPace; //new TimeSpan(0);
+				PaceLog[point.Time] = Settings.SlowestDisplayedPace;
 			}
 
 			CadenceLog[point.Time] = point.Cadence;
