@@ -6,12 +6,12 @@ namespace GpxRunParser
 {
 	public class GpxTrackPoint
 	{
-		public double Latitude { get; private set; }
-		public double Longitude { get; private set; }
-		public double Elevation { get; private set; }
-		public DateTime Time { get; private set; }
-		public double HeartRate { get; private set; }
-		public double Cadence { get; private set; }
+		public double Latitude { get; set; }
+		public double Longitude { get; set; }
+		public double Elevation { get; set; }
+		public DateTime Time { get; set; }
+		public double HeartRate { get; set; }
+		public double Cadence { get; set; }
 
 		public GpxTrackPoint()
 		{

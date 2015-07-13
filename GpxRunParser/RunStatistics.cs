@@ -22,6 +22,9 @@ namespace GpxRunParser
 
 		public TimeHistogram<double> HeartRateHistogram { get; set; }
 		public TimeHistogram<TimeSpan> PaceHistogram { get; set; }
+
+		public IList<PauseInfo> Pauses { get; set; }
+		public IList<GpxTrackPoint> Route { get; set; }
 		// ReSharper restore MemberCanBePrivate.Global
 		#endregion
 
@@ -40,11 +43,7 @@ namespace GpxRunParser
 		public IDictionary<DateTime, double> DistanceLog { get; private set; }
 
 		[JsonIgnore]
-		public IList<PauseInfo> Pauses { get; private set; }
-
-		[JsonIgnore]
-		public IList<GpxTrackPoint> Route { get; private set; }
-		[JsonIgnore]
+		// ReSharper disable MemberCanBePrivate.Global
 		public double MinLatitude { get; private set; }
 		[JsonIgnore]
 		public double MaxLatitude { get; private set; }
@@ -52,6 +51,7 @@ namespace GpxRunParser
 		public double MinLongitude { get; private set; }
 		[JsonIgnore]
 		public double MaxLongitude { get; private set; }
+		// ReSharper restore MemberCanBePrivate.Global
 		#endregion
 
 		#region Properties calculated from the above
@@ -93,7 +93,7 @@ namespace GpxRunParser
 		#endregion
 
 		#region Auxiliary classes and structures
-		public class PauseInfo
+		public struct PauseInfo
 		{
 			public GpxTrackPoint PauseStart { get; set; }
 			public GpxTrackPoint PauseEnd { get; set; }
@@ -119,12 +119,6 @@ namespace GpxRunParser
 		{
 			HeartRateHistogram = new TimeHistogram<double>();
 			PaceHistogram = new TimeHistogram<TimeSpan>();
-		}
-
-		public RunStatistics(double[] zones, TimeSpan[] paces)
-		{
-			HeartRateHistogram = new TimeHistogram<double>();
-			PaceHistogram = new TimeHistogram<TimeSpan>();
 			TotalDistance = 0.0D;
 			TotalTime = TimeSpan.Zero;
 			TotalHeartbeats = 0.0D;
@@ -145,6 +139,28 @@ namespace GpxRunParser
 			MinLongitude = double.MaxValue;
 			MaxLongitude = double.MinValue;
 			_lastIntervals = new PointIntervalData[Settings.AveragingPeriod];
+		}
+
+		public void RefreshCalculatedProperties()
+		{
+			MinLatitude = double.MaxValue;
+			MaxLatitude = double.MinValue;
+			MinLongitude = double.MaxValue;
+			MaxLongitude = double.MinValue;
+			foreach (var point in Route) {
+				if (point.Latitude < MinLatitude) {
+					MinLatitude = point.Latitude;
+				}
+				if (point.Latitude > MaxLatitude) {
+					MaxLatitude = point.Latitude;
+				}
+				if (point.Longitude < MinLongitude) {
+					MinLongitude = point.Longitude;
+				}
+				if (point.Longitude > MaxLongitude) {
+					MaxLongitude = point.Longitude;
+				}
+			}
 		}
 
 		public void SetStartPoint(GpxTrackPoint point)

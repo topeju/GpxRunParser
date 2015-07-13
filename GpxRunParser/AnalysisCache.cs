@@ -38,6 +38,7 @@ namespace GpxRunParser
 			if (fileInfo.LastWriteTimeUtc > cacheRecord.LastModified) {
 				return null;
 			}
+			cacheRecord.Statistics.RefreshCalculatedProperties();
 			return cacheRecord.Statistics;
 		}
 

@@ -8,17 +8,12 @@ namespace GpxRunParser
 {
 	public class RunAnalyzer
 	{
-		private readonly double[] _heartRateZones;
-		private readonly TimeSpan[] _paceZones;
-
 		public IDictionary<DateTime, AggregateStatistics> WeeklyStats { get; private set; }
 
 		public IDictionary<DateTime, AggregateStatistics> MonthlyStats { get; private set; }
 
-		public RunAnalyzer(double[] heartRateZones, TimeSpan[] paceZones)
+		public RunAnalyzer()
 		{
-			_heartRateZones = heartRateZones;
-			_paceZones = paceZones;
 			WeeklyStats = new Dictionary<DateTime, AggregateStatistics>();
 			MonthlyStats = new Dictionary<DateTime, AggregateStatistics>();
 		}
@@ -32,7 +27,7 @@ namespace GpxRunParser
 				var gpxNamespace = XNamespace.Get("http://www.topografix.com/GPX/1/1");
 				var gpxDoc = XDocument.Load(fileName);
 
-				runStats = new RunStatistics(_heartRateZones, _paceZones);
+				runStats = new RunStatistics();
 				var firstPoint = true;
 
 				foreach (var track in gpxDoc.Descendants(gpxNamespace + "trk")) {
@@ -55,6 +50,7 @@ namespace GpxRunParser
 						}
 					}
 				}
+
 				AnalysisCache.Store(fileName, runStats);
 			}
 

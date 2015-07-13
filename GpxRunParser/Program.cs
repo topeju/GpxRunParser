@@ -22,7 +22,7 @@ namespace GpxRunParser
 				return;
 			}
 
-			var analyzer = new RunAnalyzer(Settings.HeartRateZones, Settings.PaceBins);
+			var analyzer = new RunAnalyzer();
 
 			var assembly = Assembly.GetExecutingAssembly();
 			var pageTemplate = "";
