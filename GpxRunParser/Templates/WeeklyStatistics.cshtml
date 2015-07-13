@@ -1,118 +1,119 @@
-﻿@model GpxRunParser.RunStatistics
+﻿@using System
+@model GpxRunParser.AggregateStatistics
 <html>
-	<head>
-		<title>Statistics for the week starting on @(Model.StartTime.ToString("MMMM dd, yyyy"))</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
-	</head>
-	<body>
-	<div class="container-fluid">
+    <head>
+        <title>Statistics for the week starting on @(Model.StartTime.ToString("MMMM dd, yyyy"))</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
+    </head>
+    <body>
+        <div class="container-fluid">
 		
-		<h1>Statistics for the week starting on @(Model.StartTime.ToString("MMMM dd, yyyy"))</h1>
+            <h1>Statistics for the week starting on @(Model.StartTime.ToString("MMMM dd, yyyy"))</h1>
 		
-		<h2>Overall statistics</h2>
+            <h2>Overall statistics</h2>
 
-		<table class="table">
-			<tbody>
-				<tr>
-					<th>Number of runs</th>
-					<td>@(Model.Runs)</td>
-				</tr>
-				<tr>
-					<th>Total distance</th>
-					<td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
-				</tr>
-				<tr>
-					<th>Running time</th>
-					<td>@(Model.TotalTime.ToString("g"))</td>
-				</tr>
-				<tr>
-					<th>Average pace</th>
-					<td>@(Model.AveragePace.ToString("g"))/km</td>
-				</tr>
-				<tr>
-					<th>Average speed</th>
-					<td>@(Model.AverageSpeed.ToString("N2")) km/h</td>
-				</tr>
-				<tr>
-					<th>Average heart rate</th>
-					<td>@(Model.AverageHeartRate.ToString("N0")) beats/minute</td>
-				</tr>
-				<tr>
-					<th>Maximum heart rate</th>
-					<td>@(Model.MaxHeartRate.ToString("N0")) beats/minute</td>
-				</tr>
-				<tr>
-					<th>Total steps</th>
-					<td>@(Model.TotalSteps.ToString("N0"))</td>
-				</tr>
-				<tr>
-					<th>Average cadence</th>
-					<td>@(Model.AverageCadence.ToString("N0"))</td>
-				</tr>
-				<tr>
-					<th>Average stride length</th>
-					<td>@(Model.AverageStrideLength.ToString("N0")) cm</td>
-				</tr>
-				<tr>
-					<th>Total climb</th>
-					<td>@(Model.TotalClimb.ToString("N0")) m (according to GPS data)</td>
-				</tr>
-			</tbody>
-		</table>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>Number of runs</th>
+                        <td>@(Model.Runs)</td>
+                    </tr>
+                    <tr>
+                        <th>Total distance</th>
+                        <td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
+                    </tr>
+                    <tr>
+                        <th>Running time</th>
+                        <td>@(Model.TotalTime.ToString("g"))</td>
+                    </tr>
+                    <tr>
+                        <th>Average pace</th>
+                        <td>@(Model.AveragePace.ToString("g"))/km</td>
+                    </tr>
+                    <tr>
+                        <th>Average speed</th>
+                        <td>@(Model.AverageSpeed.ToString("N2")) km/h</td>
+                    </tr>
+                    <tr>
+                        <th>Average heart rate</th>
+                        <td>@(Model.AverageHeartRate.ToString("N0")) beats/minute</td>
+                    </tr>
+                    <tr>
+                        <th>Maximum heart rate</th>
+                        <td>@(Model.MaxHeartRate.ToString("N0")) beats/minute</td>
+                    </tr>
+                    <tr>
+                        <th>Total steps</th>
+                        <td>@(Model.TotalSteps.ToString("N0"))</td>
+                    </tr>
+                    <tr>
+                        <th>Average cadence</th>
+                        <td>@(Model.AverageCadence.ToString("N0"))</td>
+                    </tr>
+                    <tr>
+                        <th>Average stride length</th>
+                        <td>@(Model.AverageStrideLength.ToString("N0")) cm</td>
+                    </tr>
+                    <tr>
+                        <th>Total climb</th>
+                        <td>@(Model.TotalClimb.ToString("N0")) m (according to GPS data)</td>
+                    </tr>
+                </tbody>
+            </table>
 		
-		<h2>Time spent in each heart rate zone</h2>
-		@{
-			var totalTime = Model.TotalTime.TotalMilliseconds;
-		}
+            <h2>Time spent in each heart rate zone</h2>
+            @{
+	            var totalTime = Model.TotalTime.TotalMilliseconds;
+            }
 
-		<table class="table">
-			<tbody>
-			<tr>
-				<th>&lt; @(Model.ZoneBins.Bins[0])</th>
-				<td>@(Model.ZoneBins.Values[0])</td>
-				<td>@((Model.ZoneBins.Values[0].TotalMilliseconds / totalTime).ToString("P0"))</td>
-			</tr>
-			@for (var i = 0; i < Model.ZoneBins.Bins.Length - 1; i++) {
-				<tr>
-					<th>@(Model.ZoneBins.Bins[i])...@(Model.ZoneBins.Bins[i + 1])</th>
-					<td>@(Model.ZoneBins.Values[i + 1])</td>
-					<td>@((Model.ZoneBins.Values[i + 1].TotalMilliseconds / totalTime).ToString("P0"))</td>
-				</tr>
-			}
-			<tr>
-				<th>&gt; @(Model.ZoneBins.Bins[Model.ZoneBins.Bins.Length - 1])</th>
-				<td>@(Model.ZoneBins.Values[Model.ZoneBins.Bins.Length])</td>
-				<td>@((Model.ZoneBins.Values[Model.ZoneBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
-			</tr>
-			</tbody>
-		</table>
-		
-		<h2>Time spent in each pace range</h2>
-		
-		<table class="table">
-			<tbody>
-			<tr>
-				<th>&lt; @(Model.PaceBins.Bins[0])</th>
-				<td>@(Model.PaceBins.Values[0])</td>
-				<td>@((Model.PaceBins.Values[0].TotalMilliseconds / totalTime).ToString("P0"))</td>
-			</tr>
-			@for (var i = 0; i < Model.PaceBins.Bins.Length - 1; i++) {
-				<tr>
-					<th>@(Model.PaceBins.Bins[i])...@(Model.PaceBins.Bins[i + 1])</th>
-					<td>@(Model.PaceBins.Values[i + 1])</td>
-					<td>@((Model.PaceBins.Values[i + 1].TotalMilliseconds / totalTime).ToString("P0"))</td>
-				</tr>
-			}
-			<tr>
-				<th>&gt; @(Model.PaceBins.Bins[Model.PaceBins.Bins.Length - 1])</th>
-				<td>@(Model.PaceBins.Values[Model.PaceBins.Bins.Length])</td>
-				<td>@((Model.PaceBins.Values[Model.PaceBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
-			</tr>
-			</tbody>
-		</table>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th style="text-align: center">&lt; @(ViewBag.HeartRateZones[0])</th>
+                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(0.0, ViewBag.HeartRateZones[0]))</td>
+                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(0.0, ViewBag.HeartRateZones[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                    @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
+	                    <tr>
+	                        <th style="text-align: center">@(ViewBag.HeartRateZones[i])&hellip;@(ViewBag.HeartRateZones[i + 1])</th>
+	                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[i], ViewBag.HeartRateZones[i + 1]))</td>
+	                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[i], ViewBag.HeartRateZones[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+	                    </tr>
+                    }
+                    <tr>
+                        <th style="text-align: center">&gt; @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1])</th>
+                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1], double.MaxValue))</td>
+                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1], double.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                </tbody>
+            </table>
 
-		</div>
-	</body>
+            <h2>Time spent in each pace range</h2>
+
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th style="text-align: center">&lt; @(ViewBag.PaceBins[0])</th>
+                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]))</td>
+                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                    @for (var i = 0; i < ViewBag.PaceBins.Length - 1; i++) {
+	                    <tr>
+	                        <th style="text-align: center">@(ViewBag.PaceBins[i])&hellip;@(ViewBag.PaceBins[i + 1])</th>
+	                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]))</td>
+	                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+	                    </tr>
+                    }
+                    <tr>
+                        <th style="text-align: center">&gt; @(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1])</th>
+                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue))</td>
+                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </body>
 </html>

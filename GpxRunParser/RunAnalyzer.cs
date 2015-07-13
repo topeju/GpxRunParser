@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -10,73 +11,78 @@ namespace GpxRunParser
 		private readonly double[] _heartRateZones;
 		private readonly TimeSpan[] _paceZones;
 
-		public IDictionary<DateTime, RunStatistics> WeeklyStats { get; private set; }
-		public IDictionary<DateTime, RunStatistics> MonthlyStats { get; private set; }
+		public IDictionary<DateTime, AggregateStatistics> WeeklyStats { get; private set; }
+
+		public IDictionary<DateTime, AggregateStatistics> MonthlyStats { get; private set; }
 
 		public RunAnalyzer(double[] heartRateZones, TimeSpan[] paceZones)
 		{
 			_heartRateZones = heartRateZones;
 			_paceZones = paceZones;
-			WeeklyStats = new Dictionary<DateTime, RunStatistics>();
-			MonthlyStats = new Dictionary<DateTime, RunStatistics>();
+			WeeklyStats = new Dictionary<DateTime, AggregateStatistics>();
+			MonthlyStats = new Dictionary<DateTime, AggregateStatistics>();
 		}
 
-		public RunStatistics Analyze(string fileName)
+		public bool Analyze(string fileName, out RunStatistics runStats)
 		{
-			var gpxNamespace = XNamespace.Get("http://www.topografix.com/GPX/1/1");
-			var gpxDoc = XDocument.Load(fileName);
+			runStats = AnalysisCache.Fetch(fileName);
+			var analysisRun = false;
+			if (runStats == null) {
+				analysisRun = true;
+				var gpxNamespace = XNamespace.Get("http://www.topografix.com/GPX/1/1");
+				var gpxDoc = XDocument.Load(fileName);
 
-			var runStats = new RunStatistics(_heartRateZones, _paceZones);
-			RunStatistics monthlyStats = null;
-			RunStatistics weeklyStats = null;
-			var firstPoint = true;
+				runStats = new RunStatistics(_heartRateZones, _paceZones);
+				var firstPoint = true;
 
-			foreach (var track in gpxDoc.Descendants(gpxNamespace + "trk")) {
-				foreach (var segment in track.Descendants(gpxNamespace + "trkseg")) {
-					var points = from point in segment.Descendants(gpxNamespace + "trkpt")
-								 select new GpxTrackPoint(point);
-					var iterator = points.GetEnumerator();
-					if (iterator.MoveNext()) {
-						var pt = iterator.Current;
-						if (firstPoint) {
-							var month = new DateTime(pt.Time.Year, pt.Time.Month, 1);
-							if (MonthlyStats.ContainsKey(month)) {
-								monthlyStats = MonthlyStats[month];
-							} else {
-								MonthlyStats[month] = monthlyStats = new RunStatistics(_heartRateZones, _paceZones);
-								monthlyStats.StartTime = month;
+				foreach (var track in gpxDoc.Descendants(gpxNamespace + "trk")) {
+					foreach (var segment in track.Descendants(gpxNamespace + "trkseg")) {
+						var points = from point in segment.Descendants(gpxNamespace + "trkpt")
+						            select new GpxTrackPoint(point);
+						var iterator = points.GetEnumerator();
+						if (iterator.MoveNext()) {
+							var pt = iterator.Current;
+							if (firstPoint) {
+								runStats.StartTime = pt.Time;
+								firstPoint = false;
 							}
-							var deltaDays = DayOfWeek.Monday - pt.Time.DayOfWeek;
-							if (deltaDays > 0) {
-								deltaDays -= 7;
+							runStats.SetStartPoint(pt);
+							while (iterator.MoveNext()) {
+								pt = iterator.Current;
+								runStats.RecordInterval(pt);
 							}
-							var week = pt.Time.Date.AddDays(deltaDays);
-							if (WeeklyStats.ContainsKey(week)) {
-								weeklyStats = WeeklyStats[week];
-							} else {
-								WeeklyStats[week] = weeklyStats = new RunStatistics(_heartRateZones, _paceZones);
-								weeklyStats.StartTime = week;
-							}
-							runStats.StartTime = pt.Time;
-							runStats.Runs++;
-							monthlyStats.Runs++;
-							weeklyStats.Runs++;
-							firstPoint = false;
-						}
-						runStats.SetStartPoint(pt);
-						monthlyStats.SetStartPoint(pt);
-						weeklyStats.SetStartPoint(pt);
-						while (iterator.MoveNext()) {
-							pt = iterator.Current;
-							runStats.RecordInterval(pt);
-							monthlyStats.RecordInterval(pt);
-							weeklyStats.RecordInterval(pt);
+							runStats.EndSegment();
 						}
 					}
 				}
+				AnalysisCache.Store(fileName, runStats);
 			}
 
-			return runStats;
+			AggregateStatistics monthlyStats;
+			AggregateStatistics weeklyStats;
+
+			var month = new DateTime(runStats.StartTime.Year, runStats.StartTime.Month, 1);
+			if (MonthlyStats.ContainsKey(month)) {
+				monthlyStats = MonthlyStats[month];
+			} else {
+				MonthlyStats[month] = monthlyStats = new AggregateStatistics();
+				monthlyStats.StartTime = month;
+			}
+			monthlyStats.AddRun(runStats);
+			var deltaDays = DayOfWeek.Monday - runStats.StartTime.DayOfWeek;
+			if (deltaDays > 0) {
+				deltaDays -= 7;
+			}
+			var week = runStats.StartTime.Date.AddDays(deltaDays);
+			if (WeeklyStats.ContainsKey(week)) {
+				weeklyStats = WeeklyStats[week];
+			} else {
+				WeeklyStats[week] = weeklyStats = new AggregateStatistics();
+				weeklyStats.StartTime = week;
+			}
+			weeklyStats.AddRun(runStats);
+
+			return analysisRun;
 		}
 	}
 }

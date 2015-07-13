@@ -53,11 +53,11 @@ namespace GpxRunParser.Charts.Distance
 			}
 			yAxis.Minimum = minHr;
 			yAxis.Maximum = maxHr;
-			yAxis.ExtraGridlines = Stats.ZoneBins.Bins.ToArray();
-			var paletteIndex = Stats.ZoneBins.Bins.Count();
+			yAxis.ExtraGridlines = Settings.HeartRateZones;
+			var paletteIndex = Settings.HeartRateZones.Count();
 			var lower = 0.0;
 			var index = 0;
-			foreach (var zoneLimit in Stats.ZoneBins.Bins) {
+			foreach (var zoneLimit in Settings.HeartRateZones) {
 				yAxis.AddRange(lower, zoneLimit, Palette[paletteIndex][index]);
 				lower = zoneLimit;
 				index++;

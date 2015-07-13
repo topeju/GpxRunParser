@@ -13,13 +13,15 @@ namespace GpxRunParser
 		public static readonly int AveragingPeriod = int.Parse(ConfigurationManager.AppSettings["AveragingPeriod"]);
 		public static readonly double MaximumDisplayedSlope = double.Parse(ConfigurationManager.AppSettings["MaximumDisplayedSlope"]);
 		public static readonly string FilePattern = ConfigurationManager.AppSettings["FilePattern"];
+		public static readonly string RunStatsCacheFile = ConfigurationManager.AppSettings["RunStatsCacheFile"];
 
 		static Settings()
 		{
 			HeartRateZones = (from zone in ConfigurationManager.AppSettings["HeartRateZones"].Split(',')
 							  select double.Parse(zone, CultureInfo.InvariantCulture)).ToArray();
 			PaceBins = (from paceStr in ConfigurationManager.AppSettings["PaceBins"].Split(',')
-						select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1]))).ToArray();
+						select new TimeSpan(0, int.Parse(paceStr.Split(':')[0]), int.Parse(paceStr.Split(':')[1])))
+						.OrderBy(ts => ts).ToArray();
 			var slowestPace = ConfigurationManager.AppSettings["SlowestDisplayedPace"].Split(':');
 			var slowH = int.Parse(slowestPace[0]);
 			var slowM = int.Parse(slowestPace[1]);

@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using GpxRunParser.Charts.Distance;
 using GpxRunParser.Charts.Time;
 using RazorEngine;
+using RazorEngine.Configuration;
 using RazorEngine.Templating;
 
 namespace GpxRunParser
@@ -35,6 +36,14 @@ namespace GpxRunParser
 				}
 			}
 
+			// Workaround for https://github.com/Antaris/RazorEngine/issues/244 - note that this is not the recommended method!
+			var config = new TemplateServiceConfiguration {
+				DisableTempFileLocking = true,
+				CachingProvider = new DefaultCachingProvider(t => { }),
+				//Debug = true
+			};
+			Engine.Razor = RazorEngineService.Create(config);
+
 			var extRegexp = new Regex(@"\.gpx$", RegexOptions.IgnoreCase);
 
 			var runs = new List<RunInfo>();
@@ -43,86 +52,91 @@ namespace GpxRunParser
 				var gpxFiles = Directory.EnumerateFiles(dirName, Settings.FilePattern);
 
 				foreach (var fileName in gpxFiles) {
-					var runStats = analyzer.Analyze(fileName);
-
+					RunStatistics runStats;
+					var newResults = analyzer.Analyze(fileName, out runStats);
 					var baseFileName = extRegexp.Replace(fileName, "");
 					var outputFileName = baseFileName + ".html";
-					var viewBag = new DynamicViewBag();
-					viewBag.AddValue("FileName", baseFileName);
-					string page;
-					if (!individualRunCompiled) {
-						page = Engine.Razor.RunCompile(pageTemplate, "IndividualRun", typeof(RunStatistics), runStats, viewBag);
-						individualRunCompiled = true;
-					} else {
-						page = Engine.Razor.Run("IndividualRun", typeof(RunStatistics), runStats, viewBag);
-					}
-					using (var output = File.CreateText(outputFileName)) {
-						output.Write(page);
-					}
-
 					runs.Add(new RunInfo(outputFileName, runStats));
 
-					var hrChart = new HeartRateTimeChart(baseFileName, runStats);
-					hrChart.Draw();
-					hrChart.SavePng();
+					if (newResults) {
+						var viewBag = new DynamicViewBag();
+						viewBag.AddValue("FileName", baseFileName);
+						viewBag.AddValue("HeartRateZones", Settings.HeartRateZones);
+						viewBag.AddValue("PaceBins", Settings.PaceBins);
+						viewBag.AddValue("SlowestDisplayedPace", Settings.SlowestDisplayedPace);
+						string page;
+						if (!individualRunCompiled) {
+							page = Engine.Razor.RunCompile(pageTemplate, "IndividualRun", typeof(RunStatistics), runStats, viewBag);
+							individualRunCompiled = true;
+						} else {
+							page = Engine.Razor.Run("IndividualRun", typeof(RunStatistics), runStats, viewBag);
+						}
+						using (var output = File.CreateText(outputFileName)) {
+							output.Write(page);
+						}
 
-					var paceChart = new PaceTimeChart(baseFileName, runStats);
-					paceChart.Draw();
-					paceChart.SavePng();
+						var hrChart = new HeartRateTimeChart(baseFileName, runStats);
+						hrChart.Draw();
+						hrChart.SavePng();
 
-					var cadenceChart = new CadenceTimeChart(baseFileName, runStats);
-					cadenceChart.Draw();
-					cadenceChart.SavePng();
+						var paceChart = new PaceTimeChart(baseFileName, runStats);
+						paceChart.Draw();
+						paceChart.SavePng();
 
-					var elevationChart = new ElevationTimeChart(baseFileName, runStats);
-					elevationChart.Draw();
-					elevationChart.SavePng();
+						var cadenceChart = new CadenceTimeChart(baseFileName, runStats);
+						cadenceChart.Draw();
+						cadenceChart.SavePng();
 
-					var hrDistChart = new HeartRateDistanceChart(baseFileName, runStats);
-					hrDistChart.Draw();
-					hrDistChart.SavePng();
+						var elevationChart = new ElevationTimeChart(baseFileName, runStats);
+						elevationChart.Draw();
+						elevationChart.SavePng();
 
-					var paceDistChart = new PaceDistanceChart(baseFileName, runStats);
-					paceDistChart.Draw();
-					paceDistChart.SavePng();
+						var hrDistChart = new HeartRateDistanceChart(baseFileName, runStats);
+						hrDistChart.Draw();
+						hrDistChart.SavePng();
 
-					var cadenceDistChart = new CadenceDistanceChart(baseFileName, runStats);
-					cadenceDistChart.Draw();
-					cadenceDistChart.SavePng();
+						var paceDistChart = new PaceDistanceChart(baseFileName, runStats);
+						paceDistChart.Draw();
+						paceDistChart.SavePng();
 
-					var elevationDistChart = new ElevationDistanceChart(baseFileName, runStats);
-					elevationDistChart.Draw();
-					elevationDistChart.SavePng();
+						var cadenceDistChart = new CadenceDistanceChart(baseFileName, runStats);
+						cadenceDistChart.Draw();
+						cadenceDistChart.SavePng();
+
+						var elevationDistChart = new ElevationDistanceChart(baseFileName, runStats);
+						elevationDistChart.Draw();
+						elevationDistChart.SavePng();
+					}
 				}
 			}
 
-			if (!monthlyCompiled) {
-				using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.MonthlyStatistics.cshtml")) {
-					using (var reader = new StreamReader(stream)) {
-						pageTemplate = reader.ReadToEnd();
-					}
+			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.MonthlyStatistics.cshtml")) {
+				using (var reader = new StreamReader(stream)) {
+					pageTemplate = reader.ReadToEnd();
 				}
 			}
 
 			foreach (var month in analyzer.MonthlyStats.Keys) {
 				var outputFileName = String.Format("Monthly-{0:yyyy-MM}.html", month);
+				var viewBag = new DynamicViewBag();
+				viewBag.AddValue("HeartRateZones", Settings.HeartRateZones);
+				viewBag.AddValue("PaceBins", Settings.PaceBins);
+				viewBag.AddValue("SlowestDisplayedPace", Settings.SlowestDisplayedPace);
 				string page;
 				if (!monthlyCompiled) {
-					page = Engine.Razor.RunCompile(pageTemplate, "MonthlyStatistics", typeof(RunStatistics), analyzer.MonthlyStats[month]);
+					page = Engine.Razor.RunCompile(pageTemplate, "MonthlyStatistics", typeof(AggregateStatistics), analyzer.MonthlyStats[month], viewBag);
 					monthlyCompiled = true;
 				} else {
-					page = Engine.Razor.Run("MonthlyStatistics", typeof(RunStatistics), analyzer.MonthlyStats[month]);
+					page = Engine.Razor.Run("MonthlyStatistics", typeof(AggregateStatistics), analyzer.MonthlyStats[month], viewBag);
 				}
 				using (var output = File.CreateText(outputFileName)) {
 					output.Write(page);
 				}
 			}
 
-			if (!weeklyCompiled) {
-				using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.WeeklyStatistics.cshtml")) {
-					using (var reader = new StreamReader(stream)) {
-						pageTemplate = reader.ReadToEnd();
-					}
+			using (var stream = assembly.GetManifestResourceStream("GpxRunParser.Templates.WeeklyStatistics.cshtml")) {
+				using (var reader = new StreamReader(stream)) {
+					pageTemplate = reader.ReadToEnd();
 				}
 			}
 
@@ -131,12 +145,16 @@ namespace GpxRunParser
 				var outputFileName = String.Format("Weekly-{0:yyyy}-{1:D2}.html",
 												   week,
 												   calendar.GetWeekOfYear(week, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday));
+				var viewBag = new DynamicViewBag();
+				viewBag.AddValue("HeartRateZones", Settings.HeartRateZones);
+				viewBag.AddValue("PaceBins", Settings.PaceBins);
+				viewBag.AddValue("SlowestDisplayedPace", Settings.SlowestDisplayedPace);
 				string page;
 				if (!weeklyCompiled) {
-					page = Engine.Razor.RunCompile(pageTemplate, "WeeklyStatistics", typeof(RunStatistics), analyzer.WeeklyStats[week]);
+					page = Engine.Razor.RunCompile(pageTemplate, "WeeklyStatistics", typeof(AggregateStatistics), analyzer.WeeklyStats[week], viewBag);
 					weeklyCompiled = true;
 				} else {
-					page = Engine.Razor.Run("WeeklyStatistics", typeof(RunStatistics), analyzer.WeeklyStats[week]);
+					page = Engine.Razor.Run("WeeklyStatistics", typeof(AggregateStatistics), analyzer.WeeklyStats[week], viewBag);
 				}
 				using (var output = File.CreateText(outputFileName)) {
 					output.Write(page);
@@ -150,18 +168,20 @@ namespace GpxRunParser
 					}
 				}
 
-				var indexViewBag = new DynamicViewBag();
 				var startDate = runs.Min(r => r.StartTime);
 				startDate = new DateTime(startDate.Year, startDate.Month, 1);
 				var endDate = runs.Max(r => r.StartTime);
 				endDate = new DateTime(endDate.Year, endDate.Month, 1).AddMonths(1).AddDays(-1);
-				indexViewBag.AddValue("StartDate", startDate);
-				indexViewBag.AddValue("EndDate", endDate);
-				var indexPage = Engine.Razor.RunCompile(pageTemplate, "Index", typeof(IList<RunInfo>), runs, indexViewBag);
+				var viewBag = new DynamicViewBag();
+				viewBag.AddValue("StartDate", startDate);
+				viewBag.AddValue("EndDate", endDate);
+				var indexPage = Engine.Razor.RunCompile(pageTemplate, "Index", typeof(IList<RunInfo>), runs, viewBag);
 				using (var output = File.CreateText("Index.html")) {
 					output.Write(indexPage);
 				}
 			}
+
+			AnalysisCache.SaveCache();
 		}
 	}
 }

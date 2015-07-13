@@ -1,231 +1,232 @@
-﻿@model GpxRunParser.RunStatistics
-@using System.Globalization;
+﻿@using System
+@using System.Globalization
+@model GpxRunParser.RunStatistics
 <html>
-	<head>
-		<title>Run on @(Model.StartTime)</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
-		<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&amp;language=fi"></script>
+    <head>
+        <title>Run on @(Model.StartTime)</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
+        <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&amp;language=fi"></script>
     </head>
-	<body onload="load()">
+    <body onload=" load() ">
 
-	<div class="container-fluid">
+        <div class="container-fluid">
 		
-		<h1>Run on @(Model.StartTime)</h1>
+            <h1>Run on @(Model.StartTime)</h1>
 		
-		<h2>Overall statistics</h2>
+            <h2>Overall statistics</h2>
 
-		<table class="table">
-			<tbody>
-				<tr>
-					<th>Total distance</th>
-					<td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
-				</tr>
-				<tr>
-					<th>Running time</th>
-					<td>@(Model.TotalTime.ToString("g"))</td>
-				</tr>
-				<tr>
-					<th>Total time</th>
-					<td>@((Model.EndTime - Model.StartTime).ToString("g"))</td>
-				</tr>
-				<tr>
-					<th>Average pace</th>
-					<td>@(Model.AveragePace.ToString(@"h\:mm\:ss"))/km</td>
-				</tr>
-				<tr>
-					<th>Average speed</th>
-					<td>@(Model.AverageSpeed.ToString("N2")) km/h</td>
-				</tr>
-				<tr>
-					<th>Average heart rate</th>
-					<td>@(Model.AverageHeartRate.ToString("N0")) beats/minute</td>
-				</tr>
-				<tr>
-					<th>Maximum heart rate</th>
-					<td>@(Model.MaxHeartRate.ToString("N0")) beats/minute</td>
-				</tr>
-				<tr>
-					<th>Total steps</th>
-					<td>@(Model.TotalSteps.ToString("N0"))</td>
-				</tr>
-				<tr>
-					<th>Average cadence</th>
-					<td>@(Model.AverageCadence.ToString("N0"))</td>
-				</tr>
-				<tr>
-					<th>Average stride length</th>
-					<td>@(Model.AverageStrideLength.ToString("N0")) cm</td>
-				</tr>
-				<tr>
-					<th>Total climb</th>
-					<td>@(Model.TotalClimb.ToString("N0")) m (according to GPS data)</td>
-				</tr>
-			</tbody>
-		</table>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>Total distance</th>
+                        <td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
+                    </tr>
+                    <tr>
+                        <th>Running time</th>
+                        <td>@(Model.TotalTime.ToString("g"))</td>
+                    </tr>
+                    <tr>
+                        <th>Total time</th>
+                        <td>@((Model.EndTime - Model.StartTime).ToString("g"))</td>
+                    </tr>
+                    <tr>
+                        <th>Average pace</th>
+                        <td>@(Model.AveragePace.ToString(@"h\:mm\:ss"))/km</td>
+                    </tr>
+                    <tr>
+                        <th>Average speed</th>
+                        <td>@(Model.AverageSpeed.ToString("N2")) km/h</td>
+                    </tr>
+                    <tr>
+                        <th>Average heart rate</th>
+                        <td>@(Model.AverageHeartRate.ToString("N0")) beats/minute</td>
+                    </tr>
+                    <tr>
+                        <th>Maximum heart rate</th>
+                        <td>@(Model.MaxHeartRate.ToString("N0")) beats/minute</td>
+                    </tr>
+                    <tr>
+                        <th>Total steps</th>
+                        <td>@(Model.TotalSteps.ToString("N0"))</td>
+                    </tr>
+                    <tr>
+                        <th>Average cadence</th>
+                        <td>@(Model.AverageCadence.ToString("N0"))</td>
+                    </tr>
+                    <tr>
+                        <th>Average stride length</th>
+                        <td>@(Model.AverageStrideLength.ToString("N0")) cm</td>
+                    </tr>
+                    <tr>
+                        <th>Total climb</th>
+                        <td>@(Model.TotalClimb.ToString("N0")) m (according to GPS data)</td>
+                    </tr>
+                </tbody>
+            </table>
 		
-		<h2>Time spent in each heart rate zone</h2>
-		@{
-			var totalTime = Model.TotalTime.TotalMilliseconds;
-		}
+            <h2>Time spent in each heart rate zone</h2>
+            @{
+	            var totalTime = Model.TotalTime.TotalMilliseconds;
+            }
 
-		<table class="table">
-			<tbody>
-			<tr>
-				<th>&lt; @(Model.ZoneBins.Bins[0])</th>
-				<td>@(Model.ZoneBins.Values[0])</td>
-				<td>@((Model.ZoneBins.Values[0].TotalMilliseconds / totalTime).ToString("P0"))</td>
-			</tr>
-			@for (var i = 0; i < Model.ZoneBins.Bins.Length - 1; i++) {
-				<tr>
-					<th>@(Model.ZoneBins.Bins[i])...@(Model.ZoneBins.Bins[i + 1])</th>
-					<td>@(Model.ZoneBins.Values[i + 1])</td>
-					<td>@((Model.ZoneBins.Values[i + 1].TotalMilliseconds / totalTime).ToString("P0"))</td>
-				</tr>
-			}
-			<tr>
-				<th>&gt; @(Model.ZoneBins.Bins[Model.ZoneBins.Bins.Length - 1])</th>
-				<td>@(Model.ZoneBins.Values[Model.ZoneBins.Bins.Length])</td>
-				<td>@((Model.ZoneBins.Values[Model.ZoneBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
-			</tr>
-			</tbody>
-		</table>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th style="text-align: center">&lt; @(ViewBag.HeartRateZones[0])</th>
+                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(0.0, ViewBag.HeartRateZones[0]))</td>
+                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(0.0, ViewBag.HeartRateZones[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                    @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
+	                    <tr>
+	                        <th style="text-align: center">@(ViewBag.HeartRateZones[i])&hellip;@(ViewBag.HeartRateZones[i + 1])</th>
+	                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[i], ViewBag.HeartRateZones[i + 1]))</td>
+	                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[i], ViewBag.HeartRateZones[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+	                    </tr>
+                    }
+                    <tr>
+                        <th style="text-align: center">&gt; @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1])</th>
+                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1], double.MaxValue))</td>
+                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1], double.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                </tbody>
+            </table>
 		
-		<h2>Time spent in each pace range</h2>
+            <h2>Time spent in each pace range</h2>
 		
-	    <table class="table">
-	        <tbody>
-	        <tr>
-	            <th>&lt; @(Model.PaceBins.Bins[0])</th>
-	            <td>@(Model.PaceBins.Values[0])</td>
-	            <td>@((Model.PaceBins.Values[0].TotalMilliseconds / totalTime).ToString("P0"))</td>
-	        </tr>
-	        @for (var i = 0; i < Model.PaceBins.Bins.Length - 1; i++) {
-		        <tr>
-		            <th>@(Model.PaceBins.Bins[i])...@(Model.PaceBins.Bins[i + 1])</th>
-		            <td>@(Model.PaceBins.Values[i + 1])</td>
-		            <td>@((Model.PaceBins.Values[i + 1].TotalMilliseconds / totalTime).ToString("P0"))</td>
-		        </tr>
-	        }
-	        <tr>
-	            <th>&gt; @(Model.PaceBins.Bins[Model.PaceBins.Bins.Length - 1])</th>
-	            <td>@(Model.PaceBins.Values[Model.PaceBins.Bins.Length])</td>
-	            <td>@((Model.PaceBins.Values[Model.PaceBins.Bins.Length].TotalMilliseconds / totalTime).ToString("P0"))</td>
-	        </tr>
-	        </tbody>
-	    </table>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th style="text-align: center">&lt; @(ViewBag.PaceBins[0])</th>
+                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]))</td>
+                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                    @for (var i = 0; i < ViewBag.PaceBins.Length - 1; i++) {
+	                    <tr>
+	                        <th style="text-align: center">@(ViewBag.PaceBins[i])&hellip;@(ViewBag.PaceBins[i + 1])</th>
+	                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]))</td>
+	                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+	                    </tr>
+                    }
+                    <tr>
+                        <th style="text-align: center">&gt; @(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1])</th>
+                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue))</td>
+                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                </tbody>
+            </table>
 
-	    <h2>Map</h2>
+            <h2>Map</h2>
 
-	    <div id="map" style="width:900px;height:600px"></div>
+            <div id="map" style="width: 900px; height: 600px"></div>
 
-	    <h2>Time-Based Charts</h2>
+            <h2>Time-Based Charts</h2>
         
-	    <h3>Heart Rate</h3>
+            <h3>Heart Rate</h3>
 
-        <img src="@(ViewBag.FileName)_hr.png" />
+            <img src="@(ViewBag.FileName)_hr.png" />
 
-        <h3>Pace</h3>
+            <h3>Pace</h3>
 
-        <img src="@(ViewBag.FileName)_pace.png" />
+            <img src="@(ViewBag.FileName)_pace.png" />
 
-        <h3>Cadence</h3>
+            <h3>Cadence</h3>
 
-        <img src="@(ViewBag.FileName)_cad.png" />
+            <img src="@(ViewBag.FileName)_cad.png" />
 
-        <h3>Elevation (from GPX)</h3>
+            <h3>Elevation (from GPX)</h3>
 
-        <img src="@(ViewBag.FileName)_elev.png" />
+            <img src="@(ViewBag.FileName)_elev.png" />
 
-        <h2>Distance-Based Charts</h2>
+            <h2>Distance-Based Charts</h2>
 
-        <h3>Heart Rate</h3>
+            <h3>Heart Rate</h3>
 
-        <img src="@(ViewBag.FileName)_hr_dist.png" />
+            <img src="@(ViewBag.FileName)_hr_dist.png" />
 
-        <h3>Pace</h3>
+            <h3>Pace</h3>
 
-        <img src="@(ViewBag.FileName)_pace_dist.png" />
+            <img src="@(ViewBag.FileName)_pace_dist.png" />
 
-        <h3>Cadence</h3>
+            <h3>Cadence</h3>
 
-        <img src="@(ViewBag.FileName)_cad_dist.png" />
+            <img src="@(ViewBag.FileName)_cad_dist.png" />
 
-        <h3>Elevation (from GPX)</h3>
+            <h3>Elevation (from GPX)</h3>
 
-        <img src="@(ViewBag.FileName)_elev_dist.png" />
+            <img src="@(ViewBag.FileName)_elev_dist.png" />
 
         </div>
 
         <script type="text/javascript">
 //<![CDATA[
 
-var map;
-var dirRenderer;
-var dirService;
+	        var map;
+	        var dirRenderer;
+	        var dirService;
 
-function load() {
-    map = new google.maps.Map(
-        document.getElementById("map"),
-        {
-	        mapTypeId: google.maps.MapTypeId.ROADMAP,
-	        mapTypeControl: true,
-	        mapTypeControlOptions: {
-      			style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-      			mapTypeIds: [
-        			google.maps.MapTypeId.ROADMAP,
-        			google.maps.MapTypeId.SATELLITE,
-        			google.maps.MapTypeId.HYBRID,
-        			google.maps.MapTypeId.TERRAIN
-      			]
-      		}
-        }
-    );
-    var bounds = new google.maps.LatLngBounds(
-    	new google.maps.LatLng(@(Model.MinLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MinLongitude.ToString("g", CultureInfo.InvariantCulture))),
-	    new google.maps.LatLng(@(Model.MaxLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MaxLongitude.ToString("g", CultureInfo.InvariantCulture)))
-	    );
-	map.fitBounds(bounds);
-	var routePoints = [
-		@foreach (var point in Model.Route) {
-			@:new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),
-		}
-  	];
-  	var route = new google.maps.Polyline({
-    	path: routePoints,
-    	geodesic: true,
-    	strokeColor: '#FF0000',
-    	strokeOpacity: 1.0,
-    	strokeWeight: 2
-  	});
-  	route.setMap(map);
-  	var startPoint = new google.maps.Marker({
-  		position: routePoints[0],
-  		map: map,
-  		icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A3|00FF00",
-  		title: "Start"
-  	});
-  	var endPoint = new google.maps.Marker({
-  		position: routePoints[routePoints.length-1],
-  		map: map,
-  		icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000",
-  		title: "Finish"
-  	});
-  	var pausePoints = [
-  	@foreach (var point in Model.Pauses) {
-  		<text>new google.maps.Marker({
+	        function load() {
+		        map = new google.maps.Map(
+			        document.getElementById("map"),
+			        {
+				        mapTypeId: google.maps.MapTypeId.ROADMAP,
+				        mapTypeControl: true,
+				        mapTypeControlOptions: {
+					        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+					        mapTypeIds: [
+						        google.maps.MapTypeId.ROADMAP,
+						        google.maps.MapTypeId.SATELLITE,
+						        google.maps.MapTypeId.HYBRID,
+						        google.maps.MapTypeId.TERRAIN
+					        ]
+				        }
+			        }
+		        );
+		        var bounds = new google.maps.LatLngBounds(
+			        new google.maps.LatLng(@(Model.MinLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MinLongitude.ToString("g", CultureInfo.InvariantCulture))),
+			        new google.maps.LatLng(@(Model.MaxLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MaxLongitude.ToString("g", CultureInfo.InvariantCulture)))
+		        );
+		        map.fitBounds(bounds);
+		        var routePoints = [
+			        @foreach (var point in Model.Route) {
+				        @:new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),
+			        }
+		        ];
+		        var route = new google.maps.Polyline({
+			        path: routePoints,
+			        geodesic: true,
+			        strokeColor: '#FF0000',
+			        strokeOpacity: 1.0,
+			        strokeWeight: 2
+		        });
+		        route.setMap(map);
+		        var startPoint = new google.maps.Marker({
+			        position: routePoints[0],
+			        map: map,
+			        icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A3|00FF00",
+			        title: "Start"
+		        });
+		        var endPoint = new google.maps.Marker({
+			        position: routePoints[routePoints.length - 1],
+			        map: map,
+			        icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000",
+			        title: "Finish"
+		        });
+		        var pausePoints = [
+			        @foreach (var point in Model.Pauses) {
+				        <text>new google.maps.Marker({
   			position: new google.maps.LatLng(@(point.PauseEnd.Latitude.ToString("g", CultureInfo.InvariantCulture)),
   				@(point.PauseEnd.Longitude.ToString("g", CultureInfo.InvariantCulture))),
   			map: map,
   			icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%8F%B8|888888",
   			title: "Pause"
   		}),</text>
-  	}
-  	];
-}
+			        }
+		        ];
+	        }
 
 //]]>
         </script>
-	</body>
+    </body>
 </html>

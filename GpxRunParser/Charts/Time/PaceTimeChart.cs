@@ -53,7 +53,7 @@ namespace GpxRunParser.Charts.Time
 			}
 			yAxis.Minimum = TimeSpanAxis.ToDouble(fastestPace);
 			yAxis.Maximum = TimeSpanAxis.ToDouble(slowestPace);
-			yAxis.ExtraGridlines = Stats.PaceBins.Bins.Select(TimeSpanAxis.ToDouble).ToArray();
+			yAxis.ExtraGridlines = Settings.PaceBins.Select(TimeSpanAxis.ToDouble).ToArray();
 			Chart.Axes.Add(yAxis);
 			Chart.Series.Add(series);
 		}

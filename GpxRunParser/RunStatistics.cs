@@ -1,80 +1,103 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace GpxRunParser
 {
+	//FIXME: Should aggregate statistics (monthly, weekly) be split to their own class which then eats RunStatistics
+	// e.g. via the AddStatistics method below? Aggregate stats don't need quite as much information as individual runs.
 	public class RunStatistics
 	{
-		public double TotalDistance { get; private set; }
+		#region Actual properties
+		// ReSharper disable MemberCanBePrivate.Global
+		public double TotalDistance { get; set; }
+		public TimeSpan TotalTime { get; set; }
+		public double TotalHeartbeats { get; set; }
+		public double MaxHeartRate { get; set; }
+		public double TotalSteps { get; set; }
+		public double TotalClimb { get; set; }
 
+		public DateTime StartTime { get; set; }
+		public DateTime EndTime { get; set; }
+
+		public TimeHistogram<double> HeartRateHistogram { get; set; }
+		public TimeHistogram<TimeSpan> PaceHistogram { get; set; }
+		// ReSharper restore MemberCanBePrivate.Global
+		#endregion
+
+		#region Properties not persisted in the cache (i.e. not needed for aggregate statistics)
+		[JsonIgnore]
+		public IDictionary<DateTime, double> HeartRateLog { get; private set; }
+		[JsonIgnore]
+		public IDictionary<DateTime, TimeSpan> PaceLog { get; private set; }
+		[JsonIgnore]
+		public IDictionary<DateTime, double> CadenceLog { get; private set; }
+		[JsonIgnore]
+		public IDictionary<DateTime, double> ElevationLog { get; private set; }
+		[JsonIgnore]
+		public IDictionary<DateTime, double> SlopeLog { get; private set; }
+		[JsonIgnore]
+		public IDictionary<DateTime, double> DistanceLog { get; private set; }
+
+		[JsonIgnore]
+		public IList<PauseInfo> Pauses { get; private set; }
+
+		[JsonIgnore]
+		public IList<GpxTrackPoint> Route { get; private set; }
+		[JsonIgnore]
+		public double MinLatitude { get; private set; }
+		[JsonIgnore]
+		public double MaxLatitude { get; private set; }
+		[JsonIgnore]
+		public double MinLongitude { get; private set; }
+		[JsonIgnore]
+		public double MaxLongitude { get; private set; }
+		#endregion
+
+		#region Properties calculated from the above
+		[JsonIgnore]
 		public double TotalDistanceInKm
 		{
 			get { return TotalDistance / 1000.0D; }
 		}
 
-		public TimeSpan TotalTime { get; private set; }
-
+		[JsonIgnore]
 		public TimeSpan AveragePace
 		{
 			get { return new TimeSpan((long) (1000.0D * TotalTime.Ticks / TotalDistance)); }
 		}
 
+		[JsonIgnore]
 		public double AverageSpeed
 		{
 			get { return TotalDistanceInKm / TotalTime.TotalHours; }
 		}
 
-		public double TotalHeartbeats { get; private set; }
-
+		[JsonIgnore]
 		public double AverageHeartRate
 		{
 			get { return TotalHeartbeats / TotalTime.TotalMinutes; }
 		}
 
-		public double MaxHeartRate { get; private set; }
-
-		public double TotalSteps { get; private set; }
-
+		[JsonIgnore]
 		public double AverageCadence
 		{
 			get { return TotalSteps / (2.0D * TotalTime.TotalMinutes); }
 		}
 
+		[JsonIgnore]
 		public double AverageStrideLength
 		{
 			get { return TotalDistance * 100.0D / TotalSteps; }
 		}
+		#endregion
 
-		public double TotalClimb { get; private set; }
-
-		public DateTime StartTime { get; set; }
-		public DateTime EndTime { get; private set; }
-
-		public TimeBin<double> ZoneBins { get; private set; }
-		public TimeBin<TimeSpan> PaceBins { get; private set; }
-
-		public int Runs { get; set; }
-
-		public IDictionary<DateTime, double> HeartRateLog { get; private set; }
-		public IDictionary<DateTime, TimeSpan> PaceLog { get; private set; }
-		public IDictionary<DateTime, double> CadenceLog { get; private set; }
-		public IDictionary<DateTime, double> ElevationLog { get; private set; }
-		public IDictionary<DateTime, double> SlopeLog { get; private set; }
-		public IDictionary<DateTime, double> DistanceLog { get; private set; }
-
+		#region Auxiliary classes and structures
 		public class PauseInfo
 		{
 			public GpxTrackPoint PauseStart { get; set; }
 			public GpxTrackPoint PauseEnd { get; set; }
 		}
-
-		public IList<PauseInfo> Pauses { get; private set; }
-
-		public IList<GpxTrackPoint> Route { get; private set; }
-		public double MinLatitude { get; private set; }
-		public double MaxLatitude { get; private set; }
-		public double MinLongitude { get; private set; }
-		public double MaxLongitude { get; private set; }
 
 		private struct PointIntervalData
 		{
@@ -82,24 +105,32 @@ namespace GpxRunParser
 			public double Climb;
 			public TimeSpan Interval;
 		}
+		#endregion
 
+		#region Interim data used during analysis
 		private GpxTrackPoint _lastPoint;
 		private readonly PointIntervalData[] _lastIntervals;
 		private int _latestPointOffset = -1;
 		private int _earliestPointOffset = -1;
 		private int _bufferCount;
+		#endregion
+
+		public RunStatistics()
+		{
+			HeartRateHistogram = new TimeHistogram<double>();
+			PaceHistogram = new TimeHistogram<TimeSpan>();
+		}
 
 		public RunStatistics(double[] zones, TimeSpan[] paces)
 		{
-			ZoneBins = new TimeBin<double>(zones);
-			PaceBins = new TimeBin<TimeSpan>(paces);
+			HeartRateHistogram = new TimeHistogram<double>();
+			PaceHistogram = new TimeHistogram<TimeSpan>();
 			TotalDistance = 0.0D;
 			TotalTime = TimeSpan.Zero;
 			TotalHeartbeats = 0.0D;
 			MaxHeartRate = 0.0D;
 			TotalSteps = 0.0D;
 			TotalClimb = 0.0D;
-			Runs = 0;
 			HeartRateLog = new SortedDictionary<DateTime, double>();
 			PaceLog = new SortedDictionary<DateTime, TimeSpan>();
 			CadenceLog = new SortedDictionary<DateTime, double>();
@@ -115,7 +146,6 @@ namespace GpxRunParser
 			MaxLongitude = double.MinValue;
 			_lastIntervals = new PointIntervalData[Settings.AveragingPeriod];
 		}
-
 
 		public void SetStartPoint(GpxTrackPoint point)
 		{
@@ -181,12 +211,13 @@ namespace GpxRunParser
 			}
 
 			HeartRateLog[point.Time] = point.HeartRate;
-			ZoneBins.Record(point.HeartRate, deltaT);
+			HeartRateHistogram.Record(point.HeartRate, deltaT);
 			TotalHeartbeats += point.HeartRate * deltaT.TotalMinutes;
 			UpdateMaxHeartRate(point.HeartRate);
 
 			var averagedPace = new TimeSpan((long) (1000.0D * averageTime.Ticks / averagedDistance));
-			PaceBins.Record(averagedPace, deltaT);
+			// ReSharper disable once PossibleLossOfFraction
+			PaceHistogram.Record(TimeSpan.FromSeconds(averagedPace.Ticks / TimeSpan.TicksPerSecond), deltaT);
 			if (averagedDistance > 0.0 /* && averagedPace < Settings.SlowestDisplayedPace*/) {
 				PaceLog[point.Time] = averagedPace;
 			} else {
@@ -215,6 +246,10 @@ namespace GpxRunParser
 			RecordRoutePoint(point);
 
 			_lastPoint = point;
+		}
+
+		public void EndSegment()
+		{
 		}
 
 		private void RecordRoutePoint(GpxTrackPoint point)
