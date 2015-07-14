@@ -109,6 +109,10 @@ namespace GpxRunParser
 					lastPointTime = point.Time;
 				}
 			}
+			var lastPoint = run.Route.Last();
+			if (!sampledRoute.ContainsKey(lastPoint.Time)) {
+				sampledRoute[lastPoint.Time] = lastPoint;
+			}
 			foreach (var point in run.Pauses) {
 				if (!sampledRoute.ContainsKey(point.PauseStart.Time)) { 
 					sampledRoute[point.PauseStart.Time] = point.PauseStart;
