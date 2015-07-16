@@ -29,6 +29,7 @@ namespace GpxRunParser
 		#endregion
 
 		#region Properties not persisted in the cache (i.e. not needed for aggregate statistics)
+		//FIXME: Roll the *Log dictionaries into the entries in Route (extend GpxTrackPoint accordingly)
 		[JsonIgnore]
 		public IDictionary<DateTime, double> HeartRateLog { get; private set; }
 		[JsonIgnore]
@@ -43,7 +44,12 @@ namespace GpxRunParser
 		public IDictionary<DateTime, double> DistanceLog { get; private set; }
 
 		[JsonIgnore]
+		public TimeSpan FastestPace { get; private set; }
+		[JsonIgnore]
+		public TimeSpan SlowestPace { get; private set; }
+
 		// ReSharper disable MemberCanBePrivate.Global
+		[JsonIgnore]
 		public double MinLatitude { get; private set; }
 		[JsonIgnore]
 		public double MaxLatitude { get; private set; }
@@ -113,6 +119,7 @@ namespace GpxRunParser
 		private int _latestPointOffset = -1;
 		private int _earliestPointOffset = -1;
 		private int _bufferCount;
+		private TimeSpan _lastPace = new TimeSpan();
 		#endregion
 
 		public RunStatistics()
@@ -139,6 +146,8 @@ namespace GpxRunParser
 			MinLongitude = double.MaxValue;
 			MaxLongitude = double.MinValue;
 			_lastIntervals = new PointIntervalData[Settings.AveragingPeriod];
+			FastestPace = Settings.SlowestDisplayedPace;
+			SlowestPace = new TimeSpan();
 		}
 
 		public void RefreshCalculatedProperties()
@@ -175,8 +184,10 @@ namespace GpxRunParser
 				});
 			}
 			UpdateMaxHeartRate(point.HeartRate);
+			ElevationLog[point.Time] = point.Elevation;
 			DistanceLog[point.Time] = TotalDistanceInKm;
 			SlopeLog[point.Time] = 0.0D;
+			PaceLog[point.Time] = _lastPace;
 			_lastPoint = point;
 			RecordRoutePoint(point);
 		}
@@ -236,6 +247,12 @@ namespace GpxRunParser
 			PaceHistogram.Record(TimeSpan.FromSeconds(averagedPace.Ticks / TimeSpan.TicksPerSecond), deltaT);
 			if (averagedDistance > 0.0 /* && averagedPace < Settings.SlowestDisplayedPace*/) {
 				PaceLog[point.Time] = averagedPace;
+				if (averagedPace < FastestPace) {
+					FastestPace = averagedPace;
+				}
+				if (averagedPace > SlowestPace) {
+					SlowestPace = (averagedPace > Settings.SlowestDisplayedPace ? Settings.SlowestDisplayedPace : averagedPace);
+				}
 			} else {
 				PaceLog[point.Time] = Settings.SlowestDisplayedPace;
 			}
@@ -262,6 +279,31 @@ namespace GpxRunParser
 			RecordRoutePoint(point);
 
 			_lastPoint = point;
+			_lastPace = averagedDistance > 0.0 ? averagedPace : Settings.SlowestDisplayedPace;
+		}
+
+		public double ElevationAt(DateTime time)
+		{
+			if (ElevationLog.ContainsKey(time)) {
+				return ElevationLog[time];
+			}
+			throw new ArgumentException("Time not found");
+		}
+
+		public TimeSpan PaceAt(DateTime time)
+		{
+			if (PaceLog.ContainsKey(time)) {
+				return PaceLog[time];
+			}
+			throw new ArgumentException("Time not found");
+		}
+
+		public double DistanceAt(DateTime time)
+		{
+			if (DistanceLog.ContainsKey(time)) {
+				return DistanceLog[time];
+			}
+			throw new ArgumentException("Time not found");
 		}
 
 		public void EndSegment()

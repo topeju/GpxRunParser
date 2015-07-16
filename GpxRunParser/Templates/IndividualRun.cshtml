@@ -1,5 +1,6 @@
 ﻿@using System
 @using System.Globalization
+@using GpxRunParser
 @model GpxRunParser.RunStatistics
 <html>
     <head>
@@ -8,6 +9,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
         <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&amp;language=fi"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.0/lodash.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/1.1.1/dygraph-combined-dev.js"></script>
     </head>
     <body onload=" load() ">
 
@@ -125,37 +128,37 @@
         
             <h3>Heart Rate</h3>
 
-            <img src="@(ViewBag.FileName)_hr.png" />
+            <div id="heartrate_time" style="width: 900px; height: 600px"></div>
 
             <h3>Pace</h3>
 
-            <img src="@(ViewBag.FileName)_pace.png" />
+            <div id="pace_time" style="width: 900px; height: 600px"></div>
 
             <h3>Cadence</h3>
 
-            <img src="@(ViewBag.FileName)_cad.png" />
+            <div id="cadence_time" style="width: 900px; height: 600px"></div>
 
             <h3>Elevation (from GPX)</h3>
 
-            <img src="@(ViewBag.FileName)_elev.png" />
+            <div id="elevation_time" style="width: 900px; height: 600px"></div>
 
             <h2>Distance-Based Charts</h2>
 
             <h3>Heart Rate</h3>
 
-            <img src="@(ViewBag.FileName)_hr_dist.png" />
+            <div id="heartrate_distance" style="width: 900px; height: 600px"></div>
 
             <h3>Pace</h3>
 
-            <img src="@(ViewBag.FileName)_pace_dist.png" />
+            <div id="pace_distance" style="width: 900px; height: 600px"></div>
 
             <h3>Cadence</h3>
 
-            <img src="@(ViewBag.FileName)_cad_dist.png" />
+            <div id="cadence_distance" style="width: 900px; height: 600px"></div>
 
             <h3>Elevation (from GPX)</h3>
 
-            <img src="@(ViewBag.FileName)_elev_dist.png" />
+            <div id="elevation_distance" style="width: 900px; height: 600px"></div>
 
         </div>
 
@@ -188,13 +191,23 @@
 			        new google.maps.LatLng(@(Model.MaxLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MaxLongitude.ToString("g", CultureInfo.InvariantCulture)))
 		        );
 		        map.fitBounds(bounds);
-		        var routePoints = [
-			        @foreach (var point in Model.Route) {
-				        @:new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),
-			        }
-		        ];
+				var historyData = [
+				@foreach (var point in Model.Route) {
+					<text>{
+			        	time: new Date(@(point.Time.ToUnixMilliseconds())),
+			        	distance: @(Model.DistanceAt(point.Time).ToString("g", CultureInfo.InvariantCulture)),
+			        	location: new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),
+			        	heartRate: @(point.HeartRate.ToString("g", CultureInfo.InvariantCulture)),
+			        	cadence: @(point.Cadence.ToString("g", CultureInfo.InvariantCulture)),
+			        	elevation: @(Model.ElevationAt(point.Time).ToString("g", CultureInfo.InvariantCulture)),
+			        	pace: @(Model.PaceAt(point.Time).TotalMinutes.ToString("g", CultureInfo.InvariantCulture))
+			        },</text>
+				}
+			];
 		        var route = new google.maps.Polyline({
-			        path: routePoints,
+			        path: _.map(historyData, function(point) {
+			        	return point.location;
+			        }),
 			        geodesic: true,
 			        strokeColor: '#FF0000',
 			        strokeOpacity: 1.0,
@@ -202,13 +215,13 @@
 		        });
 		        route.setMap(map);
 		        var startPoint = new google.maps.Marker({
-			        position: routePoints[0],
+			        position: historyData[0].location,
 			        map: map,
 			        icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A3|00FF00",
 			        title: "Start"
 		        });
 		        var endPoint = new google.maps.Marker({
-			        position: routePoints[routePoints.length - 1],
+			        position: historyData[historyData.length - 1].location,
 			        map: map,
 			        icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000",
 			        title: "Finish"
@@ -224,6 +237,120 @@
   		}),</text>
 			        }
 		        ];
+		        function decimalMinutesToMMSS(minutes) {
+		        	var mm = Math.floor(minutes);
+		        	var ss = 60.0 * (minutes - mm);
+		        	return mm.toFixed(0) + ":" + (ss < 10 ? "0" : "") + ss.toFixed(0);
+		        }
+		        var charts = [
+		        	{
+		        		element: "heartrate_time",
+		        		xcoord: "time",
+		        		xlabel: "Time",
+		        		series: "heartRate",
+		        		ylabel: "Heart Rate",
+		        		options: {
+		        			color: "#FF0000"
+		        		}
+		        	},
+		        	{
+		        		element: "pace_time",
+		        		xcoord: "time",
+		        		xlabel: "Time",
+		        		series: "pace",
+		        		ylabel: "Pace",
+		        		options: {
+		        			color: "#00FF00",
+		        			axes: {
+		        				x: {
+		        				},
+		        				y: {
+		        					valueRange: [@(Model.SlowestPace.TotalMinutes), @(Model.FastestPace.TotalMinutes)],
+		        					valueFormatter: decimalMinutesToMMSS,
+		        					axisLabelFormatter: decimalMinutesToMMSS
+		        				}
+		        			}
+		        		}
+		        	},
+		        	{
+		        		element: "cadence_time",
+		        		xcoord: "time",
+		        		xlabel: "Time",
+		        		series: "cadence",
+		        		ylabel: "Cadence",
+		        		options: {
+		        			color: "#0000FF"
+		        		}
+		        	},
+		        	{
+		        		element: "elevation_time",
+		        		xcoord: "time",
+		        		xlabel: "Time",
+		        		series: "elevation",
+		        		ylabel: "Elevation",
+		        		options: {
+		        			color: "#A52A2A"
+		        		}
+		        	},
+		        	{
+		        		element: "heartrate_distance",
+		        		xcoord: "distance",
+		        		xlabel: "Distance",
+		        		series: "heartRate",
+		        		ylabel: "Heart Rate",
+		        		options: {
+		        			color: "#FF0000"
+		        		}
+		        	},
+		        	{
+		        		element: "pace_distance",
+		        		xcoord: "distance",
+		        		xlabel: "Distance",
+		        		series: "pace",
+		        		ylabel: "Pace",
+		        		options: {
+		        			color: "#00FF00",
+		        			axes: {
+		        				x: {
+		        				},
+		        				y: {
+		        					valueRange: [@(Model.SlowestPace.TotalMinutes), @(Model.FastestPace.TotalMinutes)],
+		        					valueFormatter: decimalMinutesToMMSS,
+		        					axisLabelFormatter: decimalMinutesToMMSS
+		        				}
+		        			}
+		        		}
+		        	},
+		        	{
+		        		element: "cadence_distance",
+		        		xcoord: "distance",
+		        		xlabel: "Distance",
+		        		series: "cadence",
+		        		ylabel: "Cadence",
+		        		options: {
+		        			color: "#0000FF"
+		        		}
+		        	},
+		        	{
+		        		element: "elevation_distance",
+		        		xcoord: "distance",
+		        		xlabel: "Distance",
+		        		series: "elevation",
+		        		ylabel: "Elevation",
+		        		options: {
+		        			color: "#A52A2A"
+		        		}
+		        	}
+		        ];
+		        _.forEach(charts, function(chart) {
+		        	new Dygraph(document.getElementById(chart.element),
+		        		_.map(historyData, function(point) {
+		        			return [ point[chart.xcoord], point[chart.series] ];
+		        		}),
+		        		_.merge(chart.options, {
+		        			labels: [chart.xlabel, chart.ylabel]
+		        		}));
+		        });
 	        }
 
 //]]>

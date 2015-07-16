@@ -21,7 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Commandlineparameters>-d /Users/topeju/devel/GpxRunParser/tmp</Commandlineparameters>
+    <Commandlineparameters>/Users/topeju/devel/GpxRunParser/tmp</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -80,6 +80,7 @@
     <Compile Include="AnalysisCache.cs" />
     <Compile Include="AggregateStatistics.cs" />
     <Compile Include="TimeHistogram.cs" />
+    <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
