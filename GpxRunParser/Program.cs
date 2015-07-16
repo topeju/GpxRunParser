@@ -75,37 +75,37 @@ namespace GpxRunParser
 							output.Write(page);
 						}
 
-						var hrChart = new HeartRateTimeChart(baseFileName, runStats);
-						hrChart.Draw();
-						hrChart.SavePng();
+						//var hrChart = new HeartRateTimeChart(baseFileName, runStats);
+						//hrChart.Draw();
+						//hrChart.SavePng();
 
-						var paceChart = new PaceTimeChart(baseFileName, runStats);
-						paceChart.Draw();
-						paceChart.SavePng();
+						//var paceChart = new PaceTimeChart(baseFileName, runStats);
+						//paceChart.Draw();
+						//paceChart.SavePng();
 
-						var cadenceChart = new CadenceTimeChart(baseFileName, runStats);
-						cadenceChart.Draw();
-						cadenceChart.SavePng();
+						//var cadenceChart = new CadenceTimeChart(baseFileName, runStats);
+						//cadenceChart.Draw();
+						//cadenceChart.SavePng();
 
-						var elevationChart = new ElevationTimeChart(baseFileName, runStats);
-						elevationChart.Draw();
-						elevationChart.SavePng();
+						//var elevationChart = new ElevationTimeChart(baseFileName, runStats);
+						//elevationChart.Draw();
+						//elevationChart.SavePng();
 
-						var hrDistChart = new HeartRateDistanceChart(baseFileName, runStats);
-						hrDistChart.Draw();
-						hrDistChart.SavePng();
+						//var hrDistChart = new HeartRateDistanceChart(baseFileName, runStats);
+						//hrDistChart.Draw();
+						//hrDistChart.SavePng();
 
-						var paceDistChart = new PaceDistanceChart(baseFileName, runStats);
-						paceDistChart.Draw();
-						paceDistChart.SavePng();
+						//var paceDistChart = new PaceDistanceChart(baseFileName, runStats);
+						//paceDistChart.Draw();
+						//paceDistChart.SavePng();
 
-						var cadenceDistChart = new CadenceDistanceChart(baseFileName, runStats);
-						cadenceDistChart.Draw();
-						cadenceDistChart.SavePng();
+						//var cadenceDistChart = new CadenceDistanceChart(baseFileName, runStats);
+						//cadenceDistChart.Draw();
+						//cadenceDistChart.SavePng();
 
-						var elevationDistChart = new ElevationDistanceChart(baseFileName, runStats);
-						elevationDistChart.Draw();
-						elevationDistChart.SavePng();
+						//var elevationDistChart = new ElevationDistanceChart(baseFileName, runStats);
+						//elevationDistChart.Draw();
+						//elevationDistChart.SavePng();
 					}
 				}
 			}

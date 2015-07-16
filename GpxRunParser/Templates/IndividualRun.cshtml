@@ -9,8 +9,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
         <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&amp;language=fi"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.0/lodash.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/1.1.1/dygraph-combined-dev.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.0/lodash.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/1.1.1/dygraph-combined.js"></script>
     </head>
     <body onload=" load() ">
 
@@ -192,28 +192,28 @@
 		        );
 		        map.fitBounds(bounds);
 				var historyData = [
-				@foreach (var point in Model.Route) {
-					<text>{
-			        	time: new Date(@(point.Time.ToUnixMilliseconds())),
-			        	distance: @(Model.DistanceAt(point.Time).ToString("g", CultureInfo.InvariantCulture)),
-			        	location: new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),
-			        	heartRate: @(point.HeartRate.ToString("g", CultureInfo.InvariantCulture)),
-			        	cadence: @(point.Cadence.ToString("g", CultureInfo.InvariantCulture)),
-			        	elevation: @(Model.ElevationAt(point.Time).ToString("g", CultureInfo.InvariantCulture)),
-			        	pace: @(Model.PaceAt(point.Time).TotalMinutes.ToString("g", CultureInfo.InvariantCulture))
-			        },</text>
-				}
-			];
+				    @foreach (var point in Model.Route) {
+					    <text>{
+			        	    time: new Date(@(point.Time.ToUnixMilliseconds())),
+			        	    distance: @(Model.DistanceAt(point.Time).ToString("g", CultureInfo.InvariantCulture)),
+			        	    location: new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),
+			        	    heartRate: @(point.HeartRate.ToString("g", CultureInfo.InvariantCulture)),
+			        	    cadence: @(point.Cadence.ToString("g", CultureInfo.InvariantCulture)),
+			        	    elevation: @(Model.ElevationAt(point.Time).ToString("g", CultureInfo.InvariantCulture)),
+			        	    pace: @(Model.PaceAt(point.Time).TotalMinutes.ToString("g", CultureInfo.InvariantCulture))
+			            },</text>
+				    }
+			    ];
 		        var route = new google.maps.Polyline({
 			        path: _.map(historyData, function(point) {
 			        	return point.location;
 			        }),
-			        geodesic: true,
+			        map: map,
+		            geodesic: true,
 			        strokeColor: '#FF0000',
-			        strokeOpacity: 1.0,
+			        strokeOpacity: 0.95,
 			        strokeWeight: 2
 		        });
-		        route.setMap(map);
 		        var startPoint = new google.maps.Marker({
 			        position: historyData[0].location,
 			        map: map,
@@ -342,16 +342,69 @@
 		        		}
 		        	}
 		        ];
+		        var highlightMarker = new google.maps.Marker({});
+		        var allCharts = [];
+                function pointTitle(point) {
+                    return point.time.toString() + "\nDistance: " + point.distance + " km\nHeart Rate: " + point.heartRate + "\nCadence: " + point.cadence + "\nPace: " + decimalMinutesToMMSS(point.pace) + "\nElevation: " + point.elevation;
+                }
 		        _.forEach(charts, function(chart) {
-		        	new Dygraph(document.getElementById(chart.element),
+		        	allCharts.push(new Dygraph(document.getElementById(chart.element),
 		        		_.map(historyData, function(point) {
 		        			return [ point[chart.xcoord], point[chart.series] ];
 		        		}),
 		        		_.merge(chart.options, {
-		        			labels: [chart.xlabel, chart.ylabel]
-		        		}));
+		        		    labels: [chart.xlabel, chart.ylabel],
+                            strokeWidth: 2.0,
+		        		    highlightCircleSize: 5,
+		        		    highlightCallback: function(event, x, points, row, seriesName) {
+					            var thisChart = this;
+					            _.forEach(allCharts, function(chart) {
+                                    if (chart != thisChart) {
+                                        chart.setSelection(row);
+                                    }
+					            });
+					            var dataItem = historyData[row];
+					            highlightMarker.setPosition(dataItem.location);
+					            highlightMarker.setMap(map);
+					            highlightMarker.setTitle(pointTitle(dataItem));
+				            }
+		        		})));
 		        });
-	        }
+		        function distanceBetweenPoints(point1, point2) {
+		            var equatorialRadius = 6378137.0; // m
+		            var latDiff = (point1.lat() - point2.lat()) * Math.PI / 180.0;
+		            var lonDiff = (point1.lng() - point2.lng()) * Math.PI / 180.0;
+		            var lat1 = point1.lat() * Math.PI / 180.0;
+		            var lat2 = point2.lat() * Math.PI / 180.0;
+		            var a = Math.sin(latDiff / 2.0) * Math.sin(latDiff / 2.0)
+					+ Math.sin(lonDiff / 2.0) * Math.sin(lonDiff / 2.0) * Math.cos(lat1) * Math.cos(lat2);
+		            var c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
+		            return equatorialRadius * c;
+		        }
+		        function findIndexOfNearestPointInPolyline(polyline, point) {
+		            var vertices = polyline.getPath().getArray();
+		            var numVertices = vertices.length;
+		            var shortestDistance = null, indexOfNearestPoint = null;
+		            for (i=0; i<numVertices; i++) {
+		                var distance = distanceBetweenPoints(vertices[i], point);
+		                if (distance < shortestDistance || shortestDistance === null) {
+		                    shortestDistance = distance;
+		                    indexOfNearestPoint = i;
+		                }
+		            }
+		            return indexOfNearestPoint;
+		        }
+		        google.maps.event.addListener(route, 'mousemove', function(event) {
+		            var pt = event.latLng;
+		            var pointIndex = findIndexOfNearestPointInPolyline(route, pt);
+		            _.forEach(allCharts, function(chart) {
+		                chart.setSelection(pointIndex);
+		            });
+		            highlightMarker.setPosition(historyData[pointIndex].location);
+		            highlightMarker.setMap(map);
+		            highlightMarker.setTitle(pointTitle(historyData[pointIndex]));
+		        });
+            }
 
 //]]>
         </script>
