@@ -329,7 +329,7 @@
 					        }),
 					        label: "Cadence",
 					        yaxis: 3,
-					        color: "#00FF00",
+					        color: "#008800",
 					        lines: {
 						        show: false
 					        }
@@ -362,6 +362,14 @@
 					        lines: { show: true, fill: true }
 				        }
 			        ];
+		            var zonePalette = [ "#EEEEEE", "#AAFFAA", "#FFFFAA", "#FFDDAA", "#FFAAAA" ];
+		            var hrZones = [
+                        { yaxis: { to: @(ViewBag.HeartRateZones[0])}, color: zonePalette[0] },
+                    @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
+	                    <text>{ yaxis: { from: @(ViewBag.HeartRateZones[i]), to: @(ViewBag.HeartRateZones[i+1]) }, color: zonePalette[@(i)] },</text>
+                    }
+                        { yaxis: { from: @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length-1])}, color: "#FFAAAA" }
+		            ];
 			        var timePlotOptions = {
 				        xaxes: [
 					        {
@@ -371,7 +379,7 @@
 				        ],
 				        yaxes: [
 					        {
-						        position: "left",
+					            position: "left",
 						        show: true
 					        },
 					        {
@@ -404,7 +412,8 @@
 				        },
 				        grid: {
 					        hoverable: true,
-					        clickable: true
+					        clickable: true,
+					        markings: hrZones
 				        }
 			        };
 			        timeChart = $.plot("#time_chart", timeSeries, timePlotOptions);
@@ -437,7 +446,7 @@
 					        }),
 					        label: "Cadence",
 					        yaxis: 3,
-					        color: "#00FF00",
+					        color: "#008800",
 					        lines: {
 						        show: false
 					        }
@@ -490,7 +499,8 @@
 				        },
 				        grid: {
 					        hoverable: true,
-					        clickable: true
+					        clickable: true,
+					        markings: hrZones
 				        }
 			        };
 			        distanceChart = $.plot("#distance_chart", distanceSeries, distancePlotOptions);
@@ -525,6 +535,11 @@
 				        timeSeries[1].lines.show = timePlotOptions.yaxes[1].show = $("#pace_time").prop('checked');
 				        timeSeries[2].lines.show = timePlotOptions.yaxes[2].show = $("#cadence_time").prop('checked');
 				        timeSeries[3].lines.show = timePlotOptions.yaxes[3].show = $("#elevation_time").prop('checked');
+                        if (timeSeries[0].lines.show) {
+	                        timePlotOptions.grid.markings = hrZones;
+                        } else {
+	                        timePlotOptions.grid.markings = undefined;
+                        }
 				        timeChart = $.plot("#time_chart", timeSeries, timePlotOptions);
 			        });
 			        $("#distance_series_selector input[type=checkbox]").change(function() {
@@ -532,6 +547,11 @@
 			            distanceSeries[1].lines.show = distancePlotOptions.yaxes[1].show = $("#pace_distance").prop('checked');
 			            distanceSeries[2].lines.show = distancePlotOptions.yaxes[2].show = $("#cadence_distance").prop('checked');
 			            distanceSeries[3].lines.show = distancePlotOptions.yaxes[3].show = $("#elevation_distance").prop('checked');
+			            if (distanceSeries[0].lines.show) {
+			                distancePlotOptions.grid.markings = hrZones;
+			            } else {
+			                distancePlotOptions.grid.markings = undefined;
+			            }
 			            distanceChart = $.plot("#distance_chart", distanceSeries, distancePlotOptions);
 			        });
 		        }
