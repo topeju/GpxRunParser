@@ -36,19 +36,9 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="OxyPlot">
-      <HintPath>..\packages\OxyPlot.Core.2014.1.546\lib\portable-net4+sl4+wp71+win8\OxyPlot.dll</HintPath>
-    </Reference>
-    <Reference Include="OxyPlot.WindowsForms">
-      <HintPath>..\packages\OxyPlot.WindowsForms.2014.1.546\lib\net45\OxyPlot.WindowsForms.dll</HintPath>
-    </Reference>
     <Reference Include="RazorEngine">
       <HintPath>..\packages\RazorEngine.3.7.0\lib\net45\RazorEngine.dll</HintPath>
     </Reference>
@@ -60,17 +50,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Charts\Distance\CadenceDistanceChart.cs" />
-    <Compile Include="Charts\Distance\DistanceChartBase.cs" />
-    <Compile Include="Charts\Distance\HeartRateDistanceChart.cs" />
-    <Compile Include="Charts\Distance\PaceDistanceChart.cs" />
-    <Compile Include="Charts\Time\ElevationTimeChart.cs" />
-    <Compile Include="Charts\Time\PaceTimeChart.cs" />
-    <Compile Include="Charts\Time\CadenceTimeChart.cs" />
-    <Compile Include="Charts\Time\TimeChartBase.cs" />
-    <Compile Include="Charts\Time\HeartRateTimeChart.cs" />
     <Compile Include="GpxTrackPoint.cs" />
-    <Compile Include="Charts\Distance\ElevationDistanceChart.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
