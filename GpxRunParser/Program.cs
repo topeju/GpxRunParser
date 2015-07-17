@@ -6,8 +6,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using RazorEngine;
+using RazorEngine.Compilation.ImpromptuInterface;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
+using WebMarkupMin.Core.Minifiers;
 
 namespace GpxRunParser
 {
@@ -69,6 +71,7 @@ namespace GpxRunParser
 						} else {
 							page = Engine.Razor.Run("IndividualRun", typeof(RunStatistics), runStats, viewBag);
 						}
+						page = MinifyPage(page, fileName);
 						using (var output = File.CreateText(outputFileName)) {
 							output.Write(page);
 						}
@@ -95,6 +98,7 @@ namespace GpxRunParser
 				} else {
 					page = Engine.Razor.Run("MonthlyStatistics", typeof(AggregateStatistics), analyzer.MonthlyStats[month], viewBag);
 				}
+				page = MinifyPage(page, String.Format("the monthly report {0:yyyy-MM}", month));
 				using (var output = File.CreateText(outputFileName)) {
 					output.Write(page);
 				}
@@ -122,6 +126,8 @@ namespace GpxRunParser
 				} else {
 					page = Engine.Razor.Run("WeeklyStatistics", typeof(AggregateStatistics), analyzer.WeeklyStats[week], viewBag);
 				}
+				page = MinifyPage(page, String.Format("weekly report {0:D2}/{1:yyyy}",
+					calendar.GetWeekOfYear(week, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday), week));
 				using (var output = File.CreateText(outputFileName)) {
 					output.Write(page);
 				}
@@ -142,12 +148,31 @@ namespace GpxRunParser
 				viewBag.AddValue("StartDate", startDate);
 				viewBag.AddValue("EndDate", endDate);
 				var indexPage = Engine.Razor.RunCompile(pageTemplate, "Index", typeof(IList<RunInfo>), runs, viewBag);
+				indexPage = MinifyPage(indexPage, "the index page");
 				using (var output = File.CreateText("Index.html")) {
 					output.Write(indexPage);
 				}
 			}
 
 			AnalysisCache.SaveCache();
+		}
+
+		private static readonly HtmlMinifier _minifier = new HtmlMinifier();
+
+		private static string MinifyPage(string page, string fileName)
+		{
+			if (Settings.MinifyHtmlFiles) {
+				var minifyResult = _minifier.Minify(page);
+				if (minifyResult.Errors.Any()) {
+					foreach (var error in minifyResult.Errors) {
+						Console.Error.WriteLine("Error minifying the HTML result for {0}: Line {1}, column {2}: {3}", fileName, error.LineNumber,
+												error.ColumnNumber, error.Message);
+					}
+				} else {
+					page = minifyResult.MinifiedContent;
+				}
+			}
+			return page;
 		}
 	}
 }

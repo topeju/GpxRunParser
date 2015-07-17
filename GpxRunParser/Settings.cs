@@ -15,6 +15,7 @@ namespace GpxRunParser
 		public static readonly string FilePattern = ConfigurationManager.AppSettings["FilePattern"];
 		public static readonly string RunStatsCacheFile = ConfigurationManager.AppSettings["RunStatsCacheFile"];
 		public static readonly TimeSpan AggregateSamplingPeriod;
+		public static readonly bool MinifyHtmlFiles = bool.Parse(ConfigurationManager.AppSettings["MinifyHtmlFiles"]);
 
 		static Settings()
 		{
