@@ -14,7 +14,7 @@ Features
 * Calculates time elapsed at different paces (bins specified using a command line parameter). Pace is calculated using moving averages to reduce the amount of noise in position data.
 * Produces weekly and monthly statistics as well as statistics on each individual run. (Charts are only generated for individual runs.)
 * Creates an index page that links each of the HTML files.
-* Generates heart rate, pace, cadence and elevation charts, with pauses in the workout highlighted.
+* Generates heart rate, pace, cadence, elevation and cumulative climb charts, with pauses in the workout highlighted.
   * The charts are generated using Javascript, and require an internet connection when viewing.
 * Shows a Google Map of the run route.
   * The weekly and monthly reports show maps with routes sampled at approximately one-minute intervals (by default).

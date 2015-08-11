@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.Globalization;
 using System.Xml.Linq;
@@ -6,15 +7,40 @@ namespace GpxRunParser
 {
 	public class GpxTrackPoint
 	{
-		public double Latitude { get; set; }
-		public double Longitude { get; set; }
-		public double Elevation { get; set; }
-		public DateTime Time { get; set; }
-		public double HeartRate { get; set; }
-		public double Cadence { get; set; }
+		#region Properties for elements in the GPX files
+		public double Latitude
+		{ get; set; }
+		public double Longitude
+		{ get; set; }
+		public double Elevation
+		{ get; set; }
+		public DateTime Time
+		{ get; set; }
+		public double HeartRate
+		{ get; set; }
+		public double Cadence
+		{ get; set; }
+		#endregion
+
+		#region Calculated properties
+		[JsonIgnore]
+		public TimeSpan Pace
+		{ get; set; }
+		[JsonIgnore]
+		public double Slope
+		{ get; set; }
+		[JsonIgnore]
+		public double CumulativeClimb
+		{ get; set; }
+		[JsonIgnore]
+		public double CumulativeDistance
+		{ get; set; }
+		#endregion
 
 		public GpxTrackPoint()
 		{
+			HeartRate = Cadence = Slope = CumulativeClimb = 0.0;
+			Pace = new TimeSpan(0);
 		}
 
 		public GpxTrackPoint(XElement element)

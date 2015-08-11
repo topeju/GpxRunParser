@@ -103,15 +103,15 @@ namespace GpxRunParser
 			Runs++;
 			DateTime lastPointTime = DateTime.MinValue;
 			var sampledRoute = new SortedDictionary<DateTime,GpxTrackPoint>();
-			foreach (var point in run.Route) {
-				if (point.Time >= lastPointTime + Settings.AggregateSamplingPeriod) {
-					sampledRoute[point.Time] = point;
-					lastPointTime = point.Time;
+			foreach (var time in run.Route.Keys) {
+				if (time >= lastPointTime + Settings.AggregateSamplingPeriod) {
+					sampledRoute[time] = run.Route[time];
+					lastPointTime = time;
 				}
 			}
 			var lastPoint = run.Route.Last();
-			if (!sampledRoute.ContainsKey(lastPoint.Time)) {
-				sampledRoute[lastPoint.Time] = lastPoint;
+			if (!sampledRoute.ContainsKey(lastPoint.Key)) {
+				sampledRoute[lastPoint.Key] = lastPoint.Value;
 			}
 			foreach (var point in run.Pauses) {
 				if (!sampledRoute.ContainsKey(point.PauseStart.Time)) { 

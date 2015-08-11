@@ -16,552 +16,587 @@
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.time.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.resize.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.crosshair.min.js"></script>
     </head>
-    <body onload="statistics.load()">
+<body onload="statistics.load()">
 
-        <div class="container-fluid">
+    <div class="container-fluid">
 
-            <h1>Run on @(Model.StartTime)</h1>
+        <h1>Run on @(Model.StartTime)</h1>
 
-            <h2>Overall statistics</h2>
+        <h2>Overall statistics</h2>
 
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <th>Total distance</th>
-                        <td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
-                    </tr>
-                    <tr>
-                        <th>Running time</th>
-                        <td>@(Model.TotalTime.ToString("g"))</td>
-                    </tr>
-                    <tr>
-                        <th>Total time</th>
-                        <td>@((Model.EndTime - Model.StartTime).ToString("g"))</td>
-                    </tr>
-                    <tr>
-                        <th>Average pace</th>
-                        <td>@(Model.AveragePace.ToString(@"h\:mm\:ss"))/km</td>
-                    </tr>
-                    <tr>
-                        <th>Average speed</th>
-                        <td>@(Model.AverageSpeed.ToString("N2")) km/h</td>
-                    </tr>
-                    <tr>
-                        <th>Average heart rate</th>
-                        <td>@(Model.AverageHeartRate.ToString("N0")) beats/minute</td>
-                    </tr>
-                    <tr>
-                        <th>Maximum heart rate</th>
-                        <td>@(Model.MaxHeartRate.ToString("N0")) beats/minute</td>
-                    </tr>
-                    <tr>
-                        <th>Total steps</th>
-                        <td>@(Model.TotalSteps.ToString("N0"))</td>
-                    </tr>
-                    <tr>
-                        <th>Average cadence</th>
-                        <td>@(Model.AverageCadence.ToString("N0"))</td>
-                    </tr>
-                    <tr>
-                        <th>Average stride length</th>
-                        <td>@(Model.AverageStrideLength.ToString("N0")) cm</td>
-                    </tr>
-                    <tr>
-                        <th>Total climb</th>
-                        <td>@(Model.TotalClimb.ToString("N0")) m (according to GPS data)</td>
-                    </tr>
-                </tbody>
-            </table>
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>Total distance</th>
+                    <td>@(Model.TotalDistanceInKm.ToString("N2")) km</td>
+                </tr>
+                <tr>
+                    <th>Running time</th>
+                    <td>@(Model.TotalTime.ToString("g"))</td>
+                </tr>
+                <tr>
+                    <th>Total time</th>
+                    <td>@((Model.EndTime - Model.StartTime).ToString("g"))</td>
+                </tr>
+                <tr>
+                    <th>Average pace</th>
+                    <td>@(Model.AveragePace.ToString(@"h\:mm\:ss"))/km</td>
+                </tr>
+                <tr>
+                    <th>Average speed</th>
+                    <td>@(Model.AverageSpeed.ToString("N2")) km/h</td>
+                </tr>
+                <tr>
+                    <th>Average heart rate</th>
+                    <td>@(Model.AverageHeartRate.ToString("N0")) beats/minute</td>
+                </tr>
+                <tr>
+                    <th>Maximum heart rate</th>
+                    <td>@(Model.MaxHeartRate.ToString("N0")) beats/minute</td>
+                </tr>
+                <tr>
+                    <th>Total steps</th>
+                    <td>@(Model.TotalSteps.ToString("N0"))</td>
+                </tr>
+                <tr>
+                    <th>Average cadence</th>
+                    <td>@(Model.AverageCadence.ToString("N0"))</td>
+                </tr>
+                <tr>
+                    <th>Average stride length</th>
+                    <td>@(Model.AverageStrideLength.ToString("N0")) cm</td>
+                </tr>
+                <tr>
+                    <th>Total climb</th>
+                    <td>@(Model.TotalClimb.ToString("N0")) m (according to GPS data)</td>
+                </tr>
+            </tbody>
+        </table>
 
-            <h2>Time spent in each heart rate zone</h2>
-            @{
-	            var totalTime = Model.TotalTime.TotalMilliseconds;
-            }
+        <h2>Time spent in each heart rate zone</h2>
+        @{
+            var totalTime = Model.TotalTime.TotalMilliseconds;
+        }
 
-            <table class="table">
-                <tbody>
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th style="text-align: center">&lt; @(ViewBag.HeartRateZones[0])</th>
+                    <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(0.0, ViewBag.HeartRateZones[0]))</td>
+                    <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(0.0, ViewBag.HeartRateZones[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                </tr>
+                @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
                     <tr>
-                        <th style="text-align: center">&lt; @(ViewBag.HeartRateZones[0])</th>
-                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(0.0, ViewBag.HeartRateZones[0]))</td>
-                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(0.0, ViewBag.HeartRateZones[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
-                    </tr>
-                    @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
-	                    <tr>
-	                        <th style="text-align: center">@(ViewBag.HeartRateZones[i])&hellip;@(ViewBag.HeartRateZones[i + 1])</th>
-	                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[i], ViewBag.HeartRateZones[i + 1]))</td>
-	                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[i], ViewBag.HeartRateZones[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
-	                    </tr>
-                    }
-                    <tr>
-                        <th style="text-align: center">&gt; @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1])</th>
-                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1], double.MaxValue))</td>
-                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1], double.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
-                    </tr>
-                </tbody>
-            </table>
+                        <th style="text-align: center">@(ViewBag.HeartRateZones[i])&hellip;@(ViewBag.HeartRateZones[i + 1])</th>
+                        <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[i], ViewBag.HeartRateZones[i + 1]))</td>
+                        <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[i], ViewBag.HeartRateZones[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>}
+                <tr>
+                    <th style="text-align: center">&gt; @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1])</th>
+                    <td style="text-align: right">@(Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1], double.MaxValue))</td>
+                    <td style="text-align: right">@((Model.HeartRateHistogram.TimeInRange(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length - 1], double.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                </tr>
+            </tbody>
+        </table>
 
-            <h2>Time spent in each pace range</h2>
+        <h2>Time spent in each pace range</h2>
 
-            <table class="table">
-                <tbody>
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th style="text-align: center">&lt; @(ViewBag.PaceBins[0])</th>
+                    <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]))</td>
+                    <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                </tr>
+                @for (var i = 0; i < ViewBag.PaceBins.Length - 1; i++) {
                     <tr>
-                        <th style="text-align: center">&lt; @(ViewBag.PaceBins[0])</th>
-                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]))</td>
-                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
-                    </tr>
-                    @for (var i = 0; i < ViewBag.PaceBins.Length - 1; i++) {
-	                    <tr>
-	                        <th style="text-align: center">@(ViewBag.PaceBins[i])&hellip;@(ViewBag.PaceBins[i + 1])</th>
-	                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]))</td>
-	                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
-	                    </tr>
-                    }
-                    <tr>
-                        <th style="text-align: center">&gt; @(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1])</th>
-                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue))</td>
-                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
-                    </tr>
-                </tbody>
-            </table>
+                        <th style="text-align: center">@(ViewBag.PaceBins[i])&hellip;@(ViewBag.PaceBins[i + 1])</th>
+                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]))</td>
+                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>}
+                <tr>
+                    <th style="text-align: center">&gt; @(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1])</th>
+                    <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue))</td>
+                    <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                </tr>
+            </tbody>
+        </table>
 
-            <div class="row">
-                <div class="col-xs-6">
-                    <h2>Map</h2>
-                    <div id="map" style="width: 100%; height: 650px"></div>
-                </div>
-                <div class="col-xs-6">
-                    <h2>Charts</h2>
-                    <div>
-                        <ul class="nav nav-tabs" role="tablist">
-                            <li role="presentation" class="active"><a href="#time" aria-controls="time" role="tab" data-toggle="tab">Time</a></li>
-                            <li role="presentation"><a href="#distance" aria-controls="distance" role="tab" data-toggle="tab">Distance</a></li>
-                        </ul>
-                        <div class="tab-content">
-                            <div role="tabpanel" class="tab-pane active" id="time">
-                                <div id="time_series_selector">
-                                    <label><input type="checkbox" id="hr_time" checked="checked" /> Heart Rate</label>
-                                    <label><input type="checkbox" id="pace_time" checked="checked" /> Pace</label>
-                                    <label><input type="checkbox" id="cadence_time" /> Cadence</label>
-                                    <label><input type="checkbox" id="elevation_time" /> Elevation</label>
-                                </div>
-                                <!-- Tab control is 42 px high, and the checkboxes are 27px; 650px-42px-27px = 581 px -->
-                                <div id="time_chart" class="chartplaceholder" style="width: 100%; height: 581px"></div>
-                            </div>
-                            <div role="tabpanel" class="tab-pane" id="distance">
-                                <div id="distance_series_selector">
-                                    <label><input type="checkbox" id="hr_distance" checked="checked" /> Heart Rate</label>
-                                    <label><input type="checkbox" id="pace_distance" checked="checked" /> Pace</label>
-                                    <label><input type="checkbox" id="cadence_distance" /> Cadence</label>
-                                    <label><input type="checkbox" id="elevation_distance" /> Elevation</label>
-                                </div>
-                                <div id="distance_chart" class="chartplaceholder" style="width: 100%; height: 581px"></div>
-                            </div>
-                        </div>
+        @* NOTE: The heights (500 px) below are determined by _my_ display (1920x1200) - I want to be able to fit both the map and the charts on-screen at once. YMMV. *@
+        <h2>Charts</h2>
+        <div>
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#time" aria-controls="time" role="tab" data-toggle="tab">Time</a></li>
+                <li role="presentation"><a href="#distance" aria-controls="distance" role="tab" data-toggle="tab">Distance</a></li>
+            </ul>
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="time">
+                    <div id="time_series_selector">
+                        <label><input type="checkbox" id="hr_time" checked="checked" /> Heart Rate</label>
+                        <label><input type="checkbox" id="pace_time" checked="checked" /> Pace</label>
+                        <label><input type="checkbox" id="cadence_time" /> Cadence</label>
+                        <label><input type="checkbox" id="elevation_time" /> Elevation</label>
+                        <label><input type="checkbox" id="climb_time" /> Climb</label>
                     </div>
+                    <!-- Tab control is 42 px high, and the checkboxes are 27px; 500px-42px-27px = 431 px -->
+                    <div id="time_chart" class="chartplaceholder" style="width: 100%; height: 431px"></div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="distance">
+                    <div id="distance_series_selector">
+                        <label><input type="checkbox" id="hr_distance" checked="checked" /> Heart Rate</label>
+                        <label><input type="checkbox" id="pace_distance" checked="checked" /> Pace</label>
+                        <label><input type="checkbox" id="cadence_distance" /> Cadence</label>
+                        <label><input type="checkbox" id="elevation_distance" /> Elevation</label>
+                        <label><input type="checkbox" id="climb_distance" /> Climb</label>
+                    </div>
+                    <div id="distance_chart" class="chartplaceholder" style="width: 100%; height: 431px"></div>
                 </div>
             </div>
         </div>
-        <div id="tooltip" class="alert alert-info" style="position: absolute; display: none; opacity: 0.80"></div>
 
-        <script type="text/javascript">
-	        //<![CDATA[
+        <h2>Map</h2>
+        <div id="map" style="width: 100%; height: 500px"></div>
 
-	        var statistics = (function() {
+    </div>
+    <div id="tooltip" class="alert alert-info" style="position: absolute; display: none; opacity: 0.80"></div>
 
-		        var map;
-		        var dirRenderer;
-		        var dirService;
+    <script type="text/javascript">
+        //<![CDATA[
 
-		        var historyData = [
-			        @foreach (var point in Model.Route) {
-<text>{time:new Date(@(point.Time.ToUnixMilliseconds())),distance:@(Model.DistanceAt(point.Time).ToString("g", CultureInfo.InvariantCulture)),location:new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)),@(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),heartRate:@(point.HeartRate.ToString("g", CultureInfo.InvariantCulture)),cadence:@(point.Cadence.ToString("g", CultureInfo.InvariantCulture)),elevation:@(Model.ElevationAt(point.Time).ToString("g", CultureInfo.InvariantCulture)),pace: @(Model.PaceAt(point.Time).TotalMinutes.ToString("g", CultureInfo.InvariantCulture))},</text>
+        var statistics = (function() {
+
+            var map;
+            var dirRenderer;
+            var dirService;
+
+            var historyData = [
+                @foreach (var point in Model.Route.Values) {
+<text>{time:new Date(@(point.Time.ToUnixMilliseconds())),distance:@(point.CumulativeDistance.ToString("g", CultureInfo.InvariantCulture)),location:new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)),@(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),heartRate:@(point.HeartRate.ToString("g", CultureInfo.InvariantCulture)),cadence:@(point.Cadence.ToString("g", CultureInfo.InvariantCulture)),elevation:@(point.Elevation.ToString("g", CultureInfo.InvariantCulture)),pace:@(point.Pace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),climb:@(point.CumulativeClimb.ToString("g", CultureInfo.InvariantCulture))},</text>
 			        }
-		        ];
+            ];
 
-		        var highlightMarker;
-		        var timeChart;
-		        var distanceChart;
+            var highlightMarker;
+            var timeChart;
+            var distanceChart;
 
-		        function load() {
-			        highlightMarker = new google.maps.Marker({});
-			        moment.locale("fi");
-			        drawCharts();
-			        drawMap();
-		        }
+            function load() {
+                highlightMarker = new google.maps.InfoWindow({});
+                moment.locale("fi");
+                drawCharts();
+                drawMap();
+            }
 
-		        function decimalMinutesToMMSS(minutes) {
-			        var mm = Math.floor(minutes);
-			        var ss = 60.0 * (minutes - mm);
-			        return mm.toFixed(0) + ":" + (ss < 10 ? "0" : "") + ss.toFixed(0);
-		        }
+            function decimalMinutesToMMSS(minutes) {
+                var mm = Math.floor(minutes);
+                var ss = 60.0 * (minutes - mm);
+                return mm.toFixed(0) + ":" + (ss < 10 ? "0" : "") + ss.toFixed(0);
+            }
 
-		        function pointTitle(point) {
-			        return moment(point.time).format("llll")
-				        + "\nDistance: " + point.distance.toFixed(2)
-				        + " km\nHeart Rate: " + point.heartRate
-				        + "\nCadence: " + point.cadence
-				        + "\nPace: " + decimalMinutesToMMSS(point.pace)
-				        + "\nElevation: " + point.elevation.toFixed(1);
-		        }
+            function pointTitle(point) {
+                return moment(point.time).format("llll:ss")
+                    + "<br />\nDistance: " + point.distance.toFixed(2)
+                    + " km<br />\nHeart Rate: " + point.heartRate
+                    + "<br />\nCadence: " + point.cadence
+                    + "<br />\nPace: " + decimalMinutesToMMSS(point.pace)
+                    + "<br />\nElevation: " + point.elevation.toFixed(1);
+            }
 
-		        function drawMap() {
-			        map = new google.maps.Map(
-				        document.getElementById("map"),
-				        {
-					        mapTypeId: google.maps.MapTypeId.ROADMAP,
-					        mapTypeControl: true,
-					        mapTypeControlOptions: {
-						        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-						        mapTypeIds: [
-							        google.maps.MapTypeId.ROADMAP,
-							        google.maps.MapTypeId.SATELLITE,
-							        google.maps.MapTypeId.HYBRID,
-							        google.maps.MapTypeId.TERRAIN
-						        ]
-					        }
-				        }
-			        );
-			        var bounds = new google.maps.LatLngBounds(
-				        new google.maps.LatLng(@(Model.MinLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MinLongitude.ToString("g", CultureInfo.InvariantCulture))),
-				        new google.maps.LatLng(@(Model.MaxLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MaxLongitude.ToString("g", CultureInfo.InvariantCulture)))
-			        );
-			        map.fitBounds(bounds);
-			        var route = new google.maps.Polyline({
-				        path: _.map(historyData, function(point) {
-					        return point.location;
-				        }),
-				        map: map,
-				        geodesic: true,
-				        strokeColor: '#FF0000',
-				        strokeOpacity: 0.95,
-				        strokeWeight: 2
-			        });
-			        var startPoint = new google.maps.Marker({
-				        position: historyData[0].location,
-				        map: map,
-				        icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A3|00FF00",
-				        title: "Start"
-			        });
-			        var endPoint = new google.maps.Marker({
-				        position: historyData[historyData.length - 1].location,
-				        map: map,
-				        icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000",
-				        title: "Finish"
-			        });
-			        var pausePoints = [
-				        @foreach (var point in Model.Pauses) {
+            function setHighlightMarker(dataItem) {
+                highlightMarker.setPosition(dataItem.location);
+                var title = pointTitle(dataItem);
+                highlightMarker.setContent(title);
+                highlightMarker.open(map);
+            }
+
+            function drawMap() {
+                map = new google.maps.Map(
+                    document.getElementById("map"),
+                    {
+                        mapTypeId: google.maps.MapTypeId.ROADMAP,
+                        mapTypeControl: true,
+                        mapTypeControlOptions: {
+                            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                            mapTypeIds: [
+                                google.maps.MapTypeId.ROADMAP,
+                                google.maps.MapTypeId.SATELLITE,
+                                google.maps.MapTypeId.HYBRID,
+                                google.maps.MapTypeId.TERRAIN
+                            ]
+                        }
+                    }
+                );
+                var bounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(@(Model.MinLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MinLongitude.ToString("g", CultureInfo.InvariantCulture))),
+                    new google.maps.LatLng(@(Model.MaxLatitude.ToString("g", CultureInfo.InvariantCulture)), @(Model.MaxLongitude.ToString("g", CultureInfo.InvariantCulture)))
+                );
+                map.fitBounds(bounds);
+                var route = new google.maps.Polyline({
+                    path: _.map(historyData, function(point) {
+                        return point.location;
+                    }),
+                    map: map,
+                    geodesic: true,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.95,
+                    strokeWeight: 2
+                });
+                var startPoint = new google.maps.Marker({
+                    position: historyData[0].location,
+                    map: map,
+                    icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A3|00FF00",
+                    title: "Start"
+                });
+                var endPoint = new google.maps.Marker({
+                    position: historyData[historyData.length - 1].location,
+                    map: map,
+                    icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000",
+                    title: "Finish"
+                });
+                var pausePoints = [
+                    @foreach (var point in Model.Pauses) {
 					        <text>new google.maps.Marker({
-                position: new google.maps.LatLng(@(point.PauseEnd.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.PauseEnd.Longitude.ToString("g", CultureInfo.InvariantCulture))),
-                map: map,
-                icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%8F%B8|888888",
-                title: "Paused between @(point.PauseStart.Time.ToString(@"H\:mm\:ss")) and @(point.PauseEnd.Time.ToString(@"H\:mm\:ss"))"
-            }),</text>
+                        position: new google.maps.LatLng(@(point.PauseEnd.Latitude.ToString("g", CultureInfo.InvariantCulture)), @(point.PauseEnd.Longitude.ToString("g", CultureInfo.InvariantCulture))),
+                        map: map,
+                        icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%8F%B8|888888",
+                        title: "Paused between @(point.PauseStart.Time.ToString(@"H\:mm\:ss")) and @(point.PauseEnd.Time.ToString(@"H\:mm\:ss"))"
+                    }),</text>
 				        }
-			        ];
+                ];
 
-			        function distanceBetweenPoints(point1, point2) {
-				        var equatorialRadius = 6378137.0; // m
-				        var latDiff = (point1.lat() - point2.lat()) * Math.PI / 180.0;
-				        var lonDiff = (point1.lng() - point2.lng()) * Math.PI / 180.0;
-				        var lat1 = point1.lat() * Math.PI / 180.0;
-				        var lat2 = point2.lat() * Math.PI / 180.0;
-				        var a = Math.sin(latDiff / 2.0) * Math.sin(latDiff / 2.0)
-					        + Math.sin(lonDiff / 2.0) * Math.sin(lonDiff / 2.0) * Math.cos(lat1) * Math.cos(lat2);
-				        var c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
-				        return equatorialRadius * c;
-			        }
+                function distanceBetweenPoints(point1, point2) {
+                    var equatorialRadius = 6378137.0; // m
+                    var latDiff = (point1.lat() - point2.lat()) * Math.PI / 180.0;
+                    var lonDiff = (point1.lng() - point2.lng()) * Math.PI / 180.0;
+                    var lat1 = point1.lat() * Math.PI / 180.0;
+                    var lat2 = point2.lat() * Math.PI / 180.0;
+                    var a = Math.sin(latDiff / 2.0) * Math.sin(latDiff / 2.0)
+                        + Math.sin(lonDiff / 2.0) * Math.sin(lonDiff / 2.0) * Math.cos(lat1) * Math.cos(lat2);
+                    var c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
+                    return equatorialRadius * c;
+                }
 
-			        function findIndexOfNearestPointInPolyline(polyline, point) {
-				        var vertices = polyline.getPath().getArray();
-				        var numVertices = vertices.length;
-				        var shortestDistance = null, indexOfNearestPoint = null;
-				        for (i = 0; i < numVertices; i++) {
-					        var distance = distanceBetweenPoints(vertices[i], point);
-					        if (distance < shortestDistance || shortestDistance === null) {
-						        shortestDistance = distance;
-						        indexOfNearestPoint = i;
-					        }
-				        }
-				        return indexOfNearestPoint;
-			        }
+                function findIndexOfNearestPointInPolyline(polyline, point) {
+                    var vertices = polyline.getPath().getArray();
+                    var numVertices = vertices.length;
+                    var shortestDistance = null, indexOfNearestPoint = null;
+                    for (i = 0; i < numVertices; i++) {
+                        var distance = distanceBetweenPoints(vertices[i], point);
+                        if (distance < shortestDistance || shortestDistance === null) {
+                            shortestDistance = distance;
+                            indexOfNearestPoint = i;
+                        }
+                    }
+                    return indexOfNearestPoint;
+                }
 
-			        google.maps.event.addListener(route, 'mousemove', function(event) {
-				        var pt = event.latLng;
-				        var pointIndex = findIndexOfNearestPointInPolyline(route, pt);
-				        timeChart.unhighlight();
-				        timeChart.highlight(0, pointIndex);
-				        distanceChart.unhighlight();
-				        distanceChart.highlight(0, pointIndex);
-				        highlightMarker.setPosition(historyData[pointIndex].location);
-				        highlightMarker.setMap(map);
-				        highlightMarker.setTitle(pointTitle(historyData[pointIndex]));
-			        });
-		        }
+                google.maps.event.addListener(route, 'mousemove', function(event) {
+                    var pt = event.latLng;
+                    var pointIndex = findIndexOfNearestPointInPolyline(route, pt);
+                    timeChart.setCrosshair({x:historyData[pointIndex].time});
+                    distanceChart.setCrosshair({x:historyData[pointIndex].time});
+                    setHighlightMarker(historyData[pointIndex]);
+                });
+            }
 
-		        function drawCharts() {
-			        var timeSeries = [
-				        {
-					        data: _.map(historyData, function(data) {
-						        return [data.time, data.heartRate];
-					        }),
-					        label: "Heart Rate",
-					        yaxis: 1,
-					        color: "#FF0000",
-					        lines: {
-						        show: true
-					        }
-				        },
-				        {
-				            data: _.map(historyData, function(data) {
-				                return [data.time, data.pace];
-				            }),
-				            label: "Pace",
-				            yaxis: 2,
-				            color: "#0000FF",
-				            lines: {
-				                show: true
-				            }
-				        },
-				        {
-					        data: _.map(historyData, function(data) {
-						        return [data.time, data.cadence];
-					        }),
-					        label: "Cadence",
-					        yaxis: 3,
-					        color: "#008800",
-					        lines: {
-						        show: false
-					        }
-				        },
-				        {
-					        data: _.map(historyData, function(data) {
-						        return [data.time, data.elevation];
-					        }),
-					        label: "Elevation",
-					        yaxis: 4,
-					        color: "#A52525",
-					        lines: {
-						        show: false
-					        }
-				        },
-				        {
-					        data: [
-						        [historyData[0].time, 0],
-						        @foreach (var pause in Model.Pauses) {
+            function drawCharts() {
+                var timeSeries = [
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.time, data.heartRate];
+                        }),
+                        label: "Heart Rate",
+                        yaxis: 1,
+                        color: "#FF0000",
+                        lines: {
+                            show: true
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.time, data.pace];
+                        }),
+                        label: "Pace",
+                        yaxis: 2,
+                        color: "#0000FF",
+                        lines: {
+                            show: true
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.time, data.cadence];
+                        }),
+                        label: "Cadence",
+                        yaxis: 3,
+                        color: "#008800",
+                        lines: {
+                            show: false
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.time, data.elevation];
+                        }),
+                        label: "Elevation",
+                        yaxis: 4,
+                        color: "#A52525",
+                        lines: {
+                            show: false
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.time, data.climb];
+                        }),
+                        label: "Climb",
+                        yaxis: 5,
+                        color: "#AAAAAA",
+                        lines: {
+                            show: false
+                        }
+                    },
+                    {
+                        data: [
+                            [historyData[0].time, 0],
+                            @foreach (var pause in Model.Pauses) {
 							    <text>[new Date(@(pause.PauseStart.Time.ToUnixMilliseconds())), 0],
-                                [new Date(@(pause.PauseStart.Time.ToUnixMilliseconds())), 1],
-                                [new Date(@(pause.PauseEnd.Time.ToUnixMilliseconds())), 1],
-                                [new Date(@(pause.PauseEnd.Time.ToUnixMilliseconds())), 0],</text>
+                            [new Date(@(pause.PauseStart.Time.ToUnixMilliseconds())), 1],
+                            [new Date(@(pause.PauseEnd.Time.ToUnixMilliseconds())), 1],
+                            [new Date(@(pause.PauseEnd.Time.ToUnixMilliseconds())), 0],</text>
 						        }
-						        [historyData[historyData.length - 1].time, 0]
-					        ],
-					        label: "Paused",
-					        yaxis: 5,
-					        color: "#888888",
-					        lines: { show: true, fill: true }
-				        }
-			        ];
-		            var zonePalette = [ "#EEEEEE", "#AAFFAA", "#FFFFAA", "#FFDDAA", "#FFAAAA" ];
-		            var hrZones = [
-                        { yaxis: { to: @(ViewBag.HeartRateZones[0])}, color: zonePalette[0] },
-                    @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
+                            [historyData[historyData.length - 1].time, 0]
+                        ],
+                        label: "Paused",
+                        yaxis: 6,
+                        color: "#888888",
+                        lines: { show: true, fill: true }
+                    }
+                ];
+                var zonePalette = [ "#EEEEEE", "#AAFFAA", "#FFFFAA", "#FFDDAA", "#FFAAAA" ];
+                var hrZones = [
+                    { yaxis: { to: @(ViewBag.HeartRateZones[0])}, color: zonePalette[0] },
+                @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
 	                    <text>{ yaxis: { from: @(ViewBag.HeartRateZones[i]), to: @(ViewBag.HeartRateZones[i+1]) }, color: zonePalette[@(i)] },</text>
                     }
-                        { yaxis: { from: @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length-1])}, color: "#FFAAAA" }
-		            ];
-			        var timePlotOptions = {
-				        xaxes: [
-					        {
-						        mode: "time",
-						        timezone: "browser"
-					        }
-				        ],
-				        yaxes: [
-					        {
-					            position: "left",
-						        show: true
-					        },
-					        {
-					            position: "right",
-					            show: true,
-					            transform: function(v) { return -v; },
-					            inverseTransform: function(v) { return -v; },
-					            min: @(Model.FastestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
-					            max: @(Model.SlowestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
-					            tickFormatter: function(val, axis) {
-					                return decimalMinutesToMMSS(val);
-					            }
-					        },
-					        {
-						        position: "right",
-						        show: false
-					        },
-					        {
-						        position: "right",
-						        show: false
-					        },
-					        {
-						        show: false,
-						        min: 0,
-						        max: 1
-					        }
-				        ],
-				        legend: {
-					        position: "s"
-				        },
-				        grid: {
-					        hoverable: true,
-					        clickable: true,
-					        markings: hrZones
-				        }
-			        };
-			        timeChart = $.plot("#time_chart", timeSeries, timePlotOptions);
-			        var distanceSeries = [
-				        {
-					        data: _.map(historyData, function(data) {
-						        return [data.distance, data.heartRate];
-					        }),
-					        label: "Heart Rate",
-					        yaxis: 1,
-					        color: "#FF0000",
-					        lines: {
-						        show: true
-					        }
-				        },
-				        {
-					        data: _.map(historyData, function(data) {
-						        return [data.distance, data.pace];
-					        }),
-					        label: "Pace",
-					        yaxis: 2,
-					        color: "#0000FF",
-					        lines: {
-						        show: true
-					        }
-				        },
-				        {
-					        data: _.map(historyData, function(data) {
-						        return [data.distance, data.cadence];
-					        }),
-					        label: "Cadence",
-					        yaxis: 3,
-					        color: "#008800",
-					        lines: {
-						        show: false
-					        }
-				        },
-				        {
-					        data: _.map(historyData, function(data) {
-						        return [data.distance, data.elevation];
-					        }),
-					        label: "Elevation",
-					        yaxis: 4,
-					        color: "#A52525",
-					        lines: {
-						        show: false
-					        }
-				        }
-			        ];
-			        var distancePlotOptions = {
-				        xaxes: [
-					        {
-						        mode: null
-					        }
-				        ],
-				        yaxes: [
-					        {
-						        position: "left",
-						        show: true
-					        },
-					        {
-					            position: "right",
-					            show: true,
-					            transform: function(v) { return -v; },
-					            inverseTransform: function(v) { return -v; },
-					            min: @(Model.FastestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
-					            max: @(Model.SlowestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
-					            tickFormatter: function(val, axis) {
-					                return decimalMinutesToMMSS(val);
-					            }
-					        },
-					        {
-						        position: "right",
-						        show: false
-					        },
-					        {
-						        position: "right",
-						        show: false
-					        }
-				        ],
-				        legend: {
-					        position: "s"
-				        },
-				        grid: {
-					        hoverable: true,
-					        clickable: true,
-					        markings: hrZones
-				        }
-			        };
-			        distanceChart = $.plot("#distance_chart", distanceSeries, distancePlotOptions);
-
-			        function setTooltip(item) {
-				        var dataItem = historyData[item.dataIndex];
-				        highlightMarker.setPosition(dataItem.location);
-				        highlightMarker.setMap(map);
-				        var title = pointTitle(dataItem);
-				        highlightMarker.setTitle(title);
-				        $("#tooltip").html(title.replace(/\n/g, "<br />")).css({ top: item.pageY + 5, left: item.pageX + 5 }).fadeIn(200);
-			        }
-
-			        var tooltipFrozen = false;
-			        $(".chartplaceholder").bind("plothover", function(event, pos, item) {
-				        if (!tooltipFrozen) {
-					        if (item) {
-						        setTooltip(item);
-					        } else {
-						        $("#tooltip").hide();
-					        }
-				        }
-			        });
-			        $(".chartplaceholder").bind("plotclick", function(event, pos, item) {
-				        if (item) {
-					        setTooltip(item);
-				        }
-				        tooltipFrozen = !tooltipFrozen;
-			        });
-			        $("#time_series_selector input[type=checkbox]").change(function() {
-				        timeSeries[0].lines.show = timePlotOptions.yaxes[0].show = $("#hr_time").prop('checked');
-				        timeSeries[1].lines.show = timePlotOptions.yaxes[1].show = $("#pace_time").prop('checked');
-				        timeSeries[2].lines.show = timePlotOptions.yaxes[2].show = $("#cadence_time").prop('checked');
-				        timeSeries[3].lines.show = timePlotOptions.yaxes[3].show = $("#elevation_time").prop('checked');
-                        if (timeSeries[0].lines.show) {
-	                        timePlotOptions.grid.markings = hrZones;
-                        } else {
-	                        timePlotOptions.grid.markings = undefined;
+                    { yaxis: { from: @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length-1])}, color: "#FFAAAA" }
+                ];
+                var timePlotOptions = {
+                    xaxes: [
+                        {
+                            mode: "time",
+                            timezone: "browser"
                         }
-				        timeChart = $.plot("#time_chart", timeSeries, timePlotOptions);
-			        });
-			        $("#distance_series_selector input[type=checkbox]").change(function() {
-			            distanceSeries[0].lines.show = distancePlotOptions.yaxes[0].show = $("#hr_distance").prop('checked');
-			            distanceSeries[1].lines.show = distancePlotOptions.yaxes[1].show = $("#pace_distance").prop('checked');
-			            distanceSeries[2].lines.show = distancePlotOptions.yaxes[2].show = $("#cadence_distance").prop('checked');
-			            distanceSeries[3].lines.show = distancePlotOptions.yaxes[3].show = $("#elevation_distance").prop('checked');
-			            if (distanceSeries[0].lines.show) {
-			                distancePlotOptions.grid.markings = hrZones;
-			            } else {
-			                distancePlotOptions.grid.markings = undefined;
-			            }
-			            distanceChart = $.plot("#distance_chart", distanceSeries, distancePlotOptions);
-			        });
-		        }
+                    ],
+                    yaxes: [
+                        {
+                            position: "left",
+                            show: true
+                        },
+                        {
+                            position: "right",
+                            show: true,
+                            transform: function(v) { return -v; },
+                            inverseTransform: function(v) { return -v; },
+                            min: @(Model.FastestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
+                            max: @(Model.SlowestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
+                            tickFormatter: function(val, axis) {
+                                return decimalMinutesToMMSS(val);
+                            }
+                        },
+                        {
+                            position: "right",
+                            show: false
+                        },
+                        {
+                            position: "right",
+                            show: false
+                        },
+                        {
+                            position: "right",
+                            show: false
+                        },
+                        {
+                            show: false,
+                            min: 0,
+                            max: 1
+                        }
+                    ],
+                    legend: {
+                        position: "s"
+                    },
+                    crosshair: { 
+                        mode: "x"
+                    },
+                    grid: {
+                        hoverable: true,
+                        markings: hrZones
+                    }
+                };
+                timeChart = $.plot("#time_chart", timeSeries, timePlotOptions);
+                var distanceSeries = [
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.distance, data.heartRate];
+                        }),
+                        label: "Heart Rate",
+                        yaxis: 1,
+                        color: "#FF0000",
+                        lines: {
+                            show: true
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.distance, data.pace];
+                        }),
+                        label: "Pace",
+                        yaxis: 2,
+                        color: "#0000FF",
+                        lines: {
+                            show: true
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.distance, data.cadence];
+                        }),
+                        label: "Cadence",
+                        yaxis: 3,
+                        color: "#008800",
+                        lines: {
+                            show: false
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.distance, data.elevation];
+                        }),
+                        label: "Elevation",
+                        yaxis: 4,
+                        color: "#A52525",
+                        lines: {
+                            show: false
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.distance, data.climb];
+                        }),
+                        label: "Climb",
+                        yaxis: 5,
+                        color: "#AAAAAA",
+                        lines: {
+                            show: false
+                        }
+                    }
+                ];
+                var distancePlotOptions = {
+                    xaxes: [
+                        {
+                            mode: null
+                        }
+                    ],
+                    yaxes: [
+                        {
+                            position: "left",
+                            show: true
+                        },
+                        {
+                            position: "right",
+                            show: true,
+                            transform: function(v) { return -v; },
+                            inverseTransform: function(v) { return -v; },
+                            min: @(Model.FastestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
+                            max: @(Model.SlowestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
+                            tickFormatter: function(val, axis) {
+                                return decimalMinutesToMMSS(val);
+                            }
+                        },
+                        {
+                            position: "right",
+                            show: false
+                        },
+                        {
+                            position: "right",
+                            show: false
+                        },
+                        {
+                            position: "right",
+                            show: false
+                        }
+                    ],
+                    legend: {
+                        position: "s"
+                    },
+                    crosshair: { 
+                        mode: "x"
+                    },
+                    grid: {
+                        hoverable: true,
+                        markings: hrZones
+                    }
+                };
+                distanceChart = $.plot("#distance_chart", distanceSeries, distancePlotOptions);
 
-		        return {
-			        load: load
-		        };
-	        })();
+                function onHover(event, pos, item) {
+                    var dataItem;
+                    if ($("#time").hasClass("active")) {
+                        if (pos.x < historyData[0].time.getTime()) return;
+                        if (pos.x > historyData[historyData.length - 1].time.getTime()) return;
+                        for (var j = 0; j < historyData.length; j++) {
+                            if (pos.x < historyData[j].time.getTime()) break;
+                        }
+                        dataItem = historyData[j];
+                    } else {
+                        if (pos.x < historyData[0].distance) return;
+                        if (pos.x > historyData[historyData.length - 1].distance) return;
+                        for (var j = 0; j < historyData.length; j++) {
+                            if (pos.x < historyData[j].distance) break;
+                        }
+                        dataItem = historyData[j];
+                    }
+                    if (!dataItem) return;
+                    setHighlightMarker(dataItem);
+                }
+                $("#time_chart").on("plothover", onHover);
+                $("#distance_chart").on("plothover", onHover);
 
-//]]>
-        </script>
-    </body>
+                $("#time_series_selector input[type=checkbox]").change(function() {
+                    timeSeries[0].lines.show = timePlotOptions.yaxes[0].show = $("#hr_time").prop('checked');
+                    timeSeries[1].lines.show = timePlotOptions.yaxes[1].show = $("#pace_time").prop('checked');
+                    timeSeries[2].lines.show = timePlotOptions.yaxes[2].show = $("#cadence_time").prop('checked');
+                    timeSeries[3].lines.show = timePlotOptions.yaxes[3].show = $("#elevation_time").prop('checked');
+                    timeSeries[4].lines.show = timePlotOptions.yaxes[4].show = $("#climb_time").prop('checked');
+                    if (timeSeries[0].lines.show) {
+                        timePlotOptions.grid.markings = hrZones;
+                    } else {
+                        timePlotOptions.grid.markings = undefined;
+                    }
+                    timeChart = $.plot("#time_chart", timeSeries, timePlotOptions);
+                });
+                $("#distance_series_selector input[type=checkbox]").change(function() {
+                    distanceSeries[0].lines.show = distancePlotOptions.yaxes[0].show = $("#hr_distance").prop('checked');
+                    distanceSeries[1].lines.show = distancePlotOptions.yaxes[1].show = $("#pace_distance").prop('checked');
+                    distanceSeries[2].lines.show = distancePlotOptions.yaxes[2].show = $("#cadence_distance").prop('checked');
+                    distanceSeries[3].lines.show = distancePlotOptions.yaxes[3].show = $("#elevation_distance").prop('checked');
+                    distanceSeries[4].lines.show = distancePlotOptions.yaxes[4].show = $("#climb_distance").prop('checked');
+                    if (distanceSeries[0].lines.show) {
+                        distancePlotOptions.grid.markings = hrZones;
+                    } else {
+                        distancePlotOptions.grid.markings = undefined;
+                    }
+                    distanceChart = $.plot("#distance_chart", distanceSeries, distancePlotOptions);
+                });
+            }
+
+            return {
+                load: load
+            };
+        })();
+
+        //]]>
+    </script>
+</body>
 </html>
