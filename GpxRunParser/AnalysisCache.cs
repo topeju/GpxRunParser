@@ -6,7 +6,7 @@ using Newtonsoft.Json.Converters;
 
 namespace GpxRunParser
 {
-	public static class AnalysisCache
+	public class AnalysisCache
 	{
 		private struct CacheRecord 
 		{
@@ -14,21 +14,23 @@ namespace GpxRunParser
 			public RunStatistics Statistics { get; set; }
 		}
 
-		private static readonly IDictionary<string, CacheRecord> _cache;
+		private readonly IDictionary<string, CacheRecord> _cache;
 
-		static AnalysisCache()
+		public AnalysisCache()
 		{
-			if (File.Exists(Settings.RunStatsCacheFile)) {
-				var cacheFile = File.ReadAllText(Settings.RunStatsCacheFile);
+			_cache = new Dictionary<string, CacheRecord>();
+		}
+
+		public AnalysisCache(string cacheFileName) : this() {
+			if (File.Exists(cacheFileName)) {
+				var cacheFile = File.ReadAllText(cacheFileName);
 				var settings = new JsonSerializerSettings();
 				settings.Converters.Add(new JavaScriptDateTimeConverter());
 				_cache = JsonConvert.DeserializeObject<Dictionary<string, CacheRecord>>(cacheFile, settings);
-			} else {
-				_cache = new Dictionary<string, CacheRecord>();
 			}
 		}
 
-		public static RunStatistics Fetch(string fileName)
+		public RunStatistics Fetch(string fileName)
 		{
 			if (!_cache.ContainsKey(fileName)) {
 				return null;
@@ -42,7 +44,7 @@ namespace GpxRunParser
 			return cacheRecord.Statistics;
 		}
 
-		public static void Store(string fileName, RunStatistics stats)
+		public void Store(string fileName, RunStatistics stats)
 		{
 			var fileInfo = new FileInfo(fileName);
 			_cache[fileName] = new CacheRecord {
@@ -51,12 +53,12 @@ namespace GpxRunParser
 			};
 		}
 
-		public static void SaveCache()
+		public void SaveCache(string cacheFileName)
 		{
 			var serializer = new JsonSerializer();
 			serializer.Converters.Add(new JavaScriptDateTimeConverter());
 			serializer.Formatting = Formatting.Indented;
-			using (var sw = new StreamWriter(Settings.RunStatsCacheFile)) {
+			using (var sw = new StreamWriter(cacheFileName)) {
 				using (JsonWriter writer = new JsonTextWriter(sw)) {
 					serializer.Serialize(writer, _cache);
 				}

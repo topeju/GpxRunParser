@@ -11,15 +11,18 @@ namespace GpxRunParser
 
 		public IDictionary<DateTime, AggregateStatistics> MonthlyStats { get; private set; }
 
-		public RunAnalyzer()
+		private AnalysisCache _cache;
+
+		public RunAnalyzer(AnalysisCache cache)
 		{
+			_cache = cache;
 			WeeklyStats = new Dictionary<DateTime, AggregateStatistics>();
 			MonthlyStats = new Dictionary<DateTime, AggregateStatistics>();
 		}
 
 		public bool Analyze(string fileName, out RunStatistics runStats)
 		{
-			runStats = AnalysisCache.Fetch(fileName);
+			runStats = _cache.Fetch(fileName);
 			var analysisRun = false;
 			if (runStats == null) {
 				analysisRun = true;
@@ -50,7 +53,7 @@ namespace GpxRunParser
 					}
 				}
 
-				AnalysisCache.Store(fileName, runStats);
+				_cache.Store(fileName, runStats);
 			}
 
 			AggregateStatistics monthlyStats;

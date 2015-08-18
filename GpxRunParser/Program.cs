@@ -10,6 +10,7 @@ using RazorEngine.Compilation.ImpromptuInterface;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using WebMarkupMin.Core.Minifiers;
+using NDesk.Options;
 
 namespace GpxRunParser
 {
@@ -17,12 +18,24 @@ namespace GpxRunParser
 	{
 		private static void Main(string[] args)
 		{
-			if (args.Length == 0) {
-				Console.Error.WriteLine("Input directory/directories not specified");
-				return;
+			bool ignoreCache = false;
+			var options = new OptionSet {
+				{ "i|ignore", v => ignoreCache = true }
+			};
+			var folders = options.Parse(args);
+			
+			if (folders.Count == 0) {
+				folders = new List<string> { "." };
 			}
 
-			var analyzer = new RunAnalyzer();
+			AnalysisCache cache;
+			if (ignoreCache) {
+				cache = new AnalysisCache();
+			} else {
+				cache = new AnalysisCache(Settings.RunStatsCacheFile);
+			}
+
+			var analyzer = new RunAnalyzer(cache);
 
 			var assembly = Assembly.GetExecutingAssembly();
 			var pageTemplate = "";
@@ -48,7 +61,7 @@ namespace GpxRunParser
 
 			var runs = new List<RunInfo>();
 
-			foreach (var dirName in args) {
+			foreach (var dirName in folders) {
 				var gpxFiles = Directory.EnumerateFiles(dirName, Settings.FilePattern);
 
 				foreach (var fileName in gpxFiles) {
@@ -154,7 +167,7 @@ namespace GpxRunParser
 				}
 			}
 
-			AnalysisCache.SaveCache();
+			cache.SaveCache(Settings.RunStatsCacheFile);
 		}
 
 		private static readonly HtmlMinifier _minifier = new HtmlMinifier();

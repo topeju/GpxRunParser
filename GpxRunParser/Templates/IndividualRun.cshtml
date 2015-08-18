@@ -17,6 +17,7 @@
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.time.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.resize.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.crosshair.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.selection.min.js"></script>
     </head>
 <body onload="statistics.load()">
 
@@ -154,6 +155,9 @@
                     <div id="distance_chart" class="chartplaceholder" style="width: 100%; height: 431px"></div>
                 </div>
             </div>
+        </div>
+        <div class="bg-info hidden" id="chartSelectionBox">
+        	<div id="chartSelectionInfo"></div>
         </div>
 
         <h2>Map</h2>
@@ -429,6 +433,9 @@
                     crosshair: { 
                         mode: "x"
                     },
+                    selection: {
+                    	mode: "x"
+                    },
                     grid: {
                         hoverable: true,
                         markings: hrZones
@@ -533,6 +540,9 @@
                     crosshair: { 
                         mode: "x"
                     },
+                    selection: {
+                    	mode: "x"
+                    },
                     grid: {
                         hoverable: true,
                         markings: hrZones
@@ -562,6 +572,72 @@
                 }
                 $("#time_chart").on("plothover", onHover);
                 $("#distance_chart").on("plothover", onHover);
+
+                function rangeDetails(startIndex, endIndex) {
+                	var start = historyData[startIndex];
+                	var end = historyData[endIndex];
+                	var durationInMinutes = (end.time-start.time) / 60000;
+                	var totalDistance = end.distance - start.distance;
+                	var pace = durationInMinutes / totalDistance;
+                	var heartBeats = 0;
+                	var steps = 0;
+                	for (var index = startIndex; index <= endIndex; index++) {
+                		var deltaT = (historyData[index].time - historyData[index - 1].time) / 60000;
+                		heartBeats += historyData[index].heartRate * deltaT;
+                		steps += historyData[index].cadence * deltaT;
+                	}
+	                return "<b>" + moment(start.time).format("llll:ss") + " to " + moment(end.time).format("llll:ss")
+	                	+ "</b><table class='table table-condensed'><tr><th>Time</th><td>" + decimalMinutesToMMSS(durationInMinutes)
+	                	+ "</td></tr><tr><th>Distance</th><td>" + totalDistance.toFixed(2)
+	                	+ " km</td></tr><tr><th>Average heart rate</th><td>" + (heartBeats / durationInMinutes).toFixed(1)
+	                	+ "</td></tr><tr><th>Average pace</th><td>" + decimalMinutesToMMSS(pace)
+	                	+ " min/km</td></tr><tr><th>Average speed</th><td>" + (totalDistance / (durationInMinutes/60.0)).toFixed(1)
+	                	+ " km/h</td></tr><tr><th>Average cadence</th><td>" + (steps / durationInMinutes).toFixed(1)
+	                	+ "</td></tr></table>"
+	                	;
+                }
+                $("#time_chart").on("plotselected", function(event, ranges) {
+                	var startIndex = 0;
+                	for (; startIndex < historyData.length; startIndex++) {
+                		if (historyData[startIndex].time >= ranges.xaxis.from) {
+                			break;
+                		}
+                	}
+                	if (startIndex >= historyData.length) return;
+                	var endIndex = startIndex;
+                	for (; endIndex < historyData.length; endIndex++) {
+                		if (historyData[endIndex].time >= ranges.xaxis.to) {
+                			break;
+                		}
+                	}
+                	if (endIndex >= historyData.length) return;
+                	$("#chartSelectionInfo").html(rangeDetails(startIndex, endIndex));
+                	$("#chartSelectionBox").removeClass("hidden");
+                });
+                $("#distance_chart").on("plotselected", function(event, ranges) {
+                	var startIndex = 0;
+                	for (; startIndex < historyData.length; startIndex++) {
+                		if (historyData[startIndex].distance >= ranges.xaxis.from) {
+                			break;
+                		}
+                	}
+                	if (startIndex >= historyData.length) return;
+                	var endIndex = startIndex;
+                	for (; endIndex < historyData.length; endIndex++) {
+                		if (historyData[endIndex].distance >= ranges.xaxis.to) {
+                			break;
+                		}
+                	}
+                	if (endIndex >= historyData.length) return;
+                	$("#chartSelectionInfo").html(rangeDetails(startIndex, endIndex));
+                	$("#chartSelectionBox").removeClass("hidden");
+                });
+                $("#time_chart").on("plotunselected", function() {
+                	$("#chartSelectionBox").addClass("hidden");
+                });
+                $("#distance_chart").on("plotunselected", function() {
+                	$("#chartSelectionBox").addClass("hidden");
+                });
 
                 $("#time_series_selector input[type=checkbox]").change(function() {
                     timeSeries[0].lines.show = timePlotOptions.yaxes[0].show = $("#hr_time").prop('checked');
