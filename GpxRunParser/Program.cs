@@ -174,6 +174,7 @@ namespace GpxRunParser
 
 		private static string MinifyPage(string page, string fileName)
 		{
+#if !DEBUG
 			if (Settings.MinifyHtmlFiles) {
 				var minifyResult = _minifier.Minify(page);
 				if (minifyResult.Errors.Any()) {
@@ -185,6 +186,7 @@ namespace GpxRunParser
 					page = minifyResult.MinifiedContent;
 				}
 			}
+#endif
 			return page;
 		}
 	}
