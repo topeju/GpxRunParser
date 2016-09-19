@@ -77,7 +77,10 @@ namespace GpxRunParser
 						viewBag.AddValue("HeartRateZones", Settings.HeartRateZones);
 						viewBag.AddValue("PaceBins", Settings.PaceBins);
 						viewBag.AddValue("SlowestDisplayedPace", Settings.SlowestDisplayedPace);
-						string page;
+                        viewBag.AddValue("ExerciseTitle", Settings.ExerciseTitle);
+                        viewBag.AddValue("DisplayPace", Settings.DisplayPace);
+                        viewBag.AddValue("DisplaySpeed", Settings.DisplaySpeed);
+                        string page;
 						if (!individualRunCompiled) {
 							page = Engine.Razor.RunCompile(pageTemplate, "IndividualRun", typeof(RunStatistics), runStats, viewBag);
 							individualRunCompiled = true;
@@ -104,6 +107,8 @@ namespace GpxRunParser
 				viewBag.AddValue("HeartRateZones", Settings.HeartRateZones);
 				viewBag.AddValue("PaceBins", Settings.PaceBins);
 				viewBag.AddValue("SlowestDisplayedPace", Settings.SlowestDisplayedPace);
+				viewBag.AddValue("DisplayPace", Settings.DisplayPace);
+				viewBag.AddValue("DisplaySpeed", Settings.DisplaySpeed);
 				string page;
 				if (!monthlyCompiled) {
 					page = Engine.Razor.RunCompile(pageTemplate, "MonthlyStatistics", typeof(AggregateStatistics), analyzer.MonthlyStats[month], viewBag);
@@ -132,6 +137,8 @@ namespace GpxRunParser
 				viewBag.AddValue("HeartRateZones", Settings.HeartRateZones);
 				viewBag.AddValue("PaceBins", Settings.PaceBins);
 				viewBag.AddValue("SlowestDisplayedPace", Settings.SlowestDisplayedPace);
+				viewBag.AddValue("DisplayPace", Settings.DisplayPace);
+				viewBag.AddValue("DisplaySpeed", Settings.DisplaySpeed);
 				string page;
 				if (!weeklyCompiled) {
 					page = Engine.Razor.RunCompile(pageTemplate, "WeeklyStatistics", typeof(AggregateStatistics), analyzer.WeeklyStats[week], viewBag);

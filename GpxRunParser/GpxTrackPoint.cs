@@ -26,6 +26,9 @@ namespace GpxRunParser
 		[JsonIgnore]
 		public TimeSpan Pace
 		{ get; set; }
+        [JsonIgnore]
+        public double Speed 
+        { get; set; }
 		[JsonIgnore]
 		public double Slope
 		{ get; set; }
@@ -41,6 +44,7 @@ namespace GpxRunParser
 		{
 			HeartRate = Cadence = Slope = CumulativeClimb = 0.0;
 			Pace = new TimeSpan(0);
+            Speed = double.MinValue;
 		}
 
 		public GpxTrackPoint(XElement element)

@@ -4,7 +4,7 @@
 @model GpxRunParser.RunStatistics
 <html>
     <head>
-        <title>Run on @(Model.StartTime)</title>
+        <title>@(ViewBag.ExerciseTitle) on @(Model.StartTime)</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/cerulean/bootstrap.min.css" />
@@ -23,7 +23,7 @@
 
     <div class="container-fluid">
 
-        <h1>Run on @(Model.StartTime)</h1>
+        <h1>@(ViewBag.ExerciseTitle) on @(Model.StartTime)</h1>
 
         <h2>Overall statistics</h2>
 
@@ -102,28 +102,30 @@
             </tbody>
         </table>
 
-        <h2>Time spent in each pace range</h2>
+        @if (ViewBag.DisplayPace) {
+            <h2>Time spent in each pace range</h2>
 
-        <table class="table">
-            <tbody>
-                <tr>
-                    <th style="text-align: center">&lt; @(ViewBag.PaceBins[0])</th>
-                    <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]))</td>
-                    <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
-                </tr>
-                @for (var i = 0; i < ViewBag.PaceBins.Length - 1; i++) {
+            <table class="table">
+                <tbody>
                     <tr>
-                        <th style="text-align: center">@(ViewBag.PaceBins[i])&hellip;@(ViewBag.PaceBins[i + 1])</th>
-                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]))</td>
-                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
-                    </tr>}
-                <tr>
-                    <th style="text-align: center">&gt; @(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1])</th>
-                    <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue))</td>
-                    <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
-                </tr>
-            </tbody>
-        </table>
+                        <th style="text-align: center">&lt; @(ViewBag.PaceBins[0])</th>
+                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]))</td>
+                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(TimeSpan.MinValue, ViewBag.PaceBins[0]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                    @for (var i = 0; i < ViewBag.PaceBins.Length - 1; i++) {
+                        <tr>
+                            <th style="text-align: center">@(ViewBag.PaceBins[i])&hellip;@(ViewBag.PaceBins[i + 1])</th>
+                            <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]))</td>
+                            <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[i], ViewBag.PaceBins[i + 1]).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                        </tr>}
+                    <tr>
+                        <th style="text-align: center">&gt; @(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1])</th>
+                        <td style="text-align: right">@(Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue))</td>
+                        <td style="text-align: right">@((Model.PaceHistogram.TimeInRange(ViewBag.PaceBins[ViewBag.PaceBins.Length - 1], TimeSpan.MaxValue).TotalMilliseconds / totalTime).ToString("P0"))</td>
+                    </tr>
+                </tbody>
+            </table>
+        }
 
         @* NOTE: The heights (500 px) below are determined by _my_ display (1920x1200) - I want to be able to fit both the map and the charts on-screen at once. YMMV. *@
         <h2>Charts</h2>
@@ -136,7 +138,8 @@
                 <div role="tabpanel" class="tab-pane active" id="time">
                     <div id="time_series_selector">
                         <label><input type="checkbox" id="hr_time" checked="checked" /> Heart Rate</label>
-                        <label><input type="checkbox" id="pace_time" checked="checked" /> Pace</label>
+                        <label><input type="checkbox" id="pace_time"@(ViewBag.DisplayPace ? " checked=\"checked\"" : "")" /> Pace</label>
+                        <label><input type="checkbox" id="speed_time"@(ViewBag.DisplaySpeed ? " checked=\"checked\"" : "")" /> Speed</label>
                         <label><input type="checkbox" id="cadence_time" /> Cadence</label>
                         <label><input type="checkbox" id="elevation_time" /> Elevation</label>
                         <label><input type="checkbox" id="climb_time" /> Climb</label>
@@ -147,7 +150,8 @@
                 <div role="tabpanel" class="tab-pane" id="distance">
                     <div id="distance_series_selector">
                         <label><input type="checkbox" id="hr_distance" checked="checked" /> Heart Rate</label>
-                        <label><input type="checkbox" id="pace_distance" checked="checked" /> Pace</label>
+                        <label><input type="checkbox" id="pace_distance"@(ViewBag.DisplayPace ? " checked=\"checked\"" : "")" /> Pace</label>
+                        <label><input type="checkbox" id="speed_distance"@(ViewBag.DisplaySpeed ? " checked=\"checked\"" : "")" /> Speed</label>
                         <label><input type="checkbox" id="cadence_distance" /> Cadence</label>
                         <label><input type="checkbox" id="elevation_distance" /> Elevation</label>
                         <label><input type="checkbox" id="climb_distance" /> Climb</label>
@@ -157,7 +161,7 @@
             </div>
         </div>
         <div class="bg-info hidden" id="chartSelectionBox">
-        	<div id="chartSelectionInfo"></div>
+            <div id="chartSelectionInfo"></div>
         </div>
 
         <h2>Map</h2>
@@ -177,7 +181,7 @@
 
             var historyData = [
                 @foreach (var point in Model.Route.Values) {
-<text>{time:new Date(@(point.Time.ToUnixMilliseconds())),distance:@(point.CumulativeDistance.ToString("g", CultureInfo.InvariantCulture)),location:new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)),@(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),heartRate:@(point.HeartRate.ToString("g", CultureInfo.InvariantCulture)),cadence:@(point.Cadence.ToString("g", CultureInfo.InvariantCulture)),elevation:@(point.Elevation.ToString("g", CultureInfo.InvariantCulture)),pace:@(point.Pace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),climb:@(point.CumulativeClimb.ToString("g", CultureInfo.InvariantCulture))},</text>
+<text>{time:new Date(@(point.Time.ToUnixMilliseconds())),distance:@(point.CumulativeDistance.ToString("g", CultureInfo.InvariantCulture)),location:new google.maps.LatLng(@(point.Latitude.ToString("g", CultureInfo.InvariantCulture)),@(point.Longitude.ToString("g", CultureInfo.InvariantCulture))),heartRate:@(point.HeartRate.ToString("g", CultureInfo.InvariantCulture)),cadence:@(point.Cadence.ToString("g", CultureInfo.InvariantCulture)),elevation:@(point.Elevation.ToString("g", CultureInfo.InvariantCulture)),pace:@(point.Pace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),climb:@(point.CumulativeClimb.ToString("g", CultureInfo.InvariantCulture)),speed:@(point.Speed.ToString("g",CultureInfo.InvariantCulture))},</text>
 			        }
             ];
 
@@ -204,6 +208,7 @@
                     + " km<br />\nHeart Rate: " + point.heartRate
                     + "<br />\nCadence: " + point.cadence
                     + "<br />\nPace: " + decimalMinutesToMMSS(point.pace)
+                    + "<br />\nSpeed: " + point.speed.toFixed(1)
                     + "<br />\nElevation: " + point.elevation.toFixed(1);
             }
 
@@ -326,15 +331,26 @@
                         yaxis: 2,
                         color: "#0000FF",
                         lines: {
-                            show: true
-                        }
+                            show: @(ViewBag.DisplayPace.ToString().ToLower())
+                            }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.time, data.speed];
+                        }),
+                        label: "Speed",
+                        yaxis: 3,
+                        color: "#0000FF",
+                        lines: {
+                            show: @(ViewBag.DisplaySpeed.ToString().ToLower())
+                            }
                     },
                     {
                         data: _.map(historyData, function(data) {
                             return [data.time, data.cadence];
                         }),
                         label: "Cadence",
-                        yaxis: 3,
+                        yaxis: 4,
                         color: "#008800",
                         lines: {
                             show: false
@@ -345,7 +361,7 @@
                             return [data.time, data.elevation];
                         }),
                         label: "Elevation",
-                        yaxis: 4,
+                        yaxis: 5,
                         color: "#A52525",
                         lines: {
                             show: false
@@ -356,7 +372,7 @@
                             return [data.time, data.climb];
                         }),
                         label: "Climb",
-                        yaxis: 5,
+                        yaxis: 6,
                         color: "#AAAAAA",
                         lines: {
                             show: false
@@ -364,28 +380,30 @@
                     },
                     {
                         data: [
+
                             [historyData[0].time, 0],
-                            @foreach (var pause in Model.Pauses) {
-							    <text>[new Date(@(pause.PauseStart.Time.ToUnixMilliseconds())), 0],
-                            [new Date(@(pause.PauseStart.Time.ToUnixMilliseconds())), 1],
-                            [new Date(@(pause.PauseEnd.Time.ToUnixMilliseconds())), 1],
-                            [new Date(@(pause.PauseEnd.Time.ToUnixMilliseconds())), 0],</text>
+                                                    @foreach (var pause in Model.Pauses) {
+
+                                <text>[new Date(@(pause.PauseStart.Time.ToUnixMilliseconds())), 0],
+                                                    [new Date(@(pause.PauseStart.Time.ToUnixMilliseconds())), 1],
+                                                    [new Date(@(pause.PauseEnd.Time.ToUnixMilliseconds())), 1],
+                                                    [new Date(@(pause.PauseEnd.Time.ToUnixMilliseconds())), 0],</text>
 						        }
                             [historyData[historyData.length - 1].time, 0]
                         ],
                         label: "Paused",
-                        yaxis: 6,
+                        yaxis: 7,
                         color: "#888888",
                         lines: { show: true, fill: true }
                     }
                 ];
                 var zonePalette = [ "#EEEEEE", "#AAFFAA", "#FFFFAA", "#FFDDAA", "#FFAAAA" ];
                 var hrZones = [
-                    { yaxis: { to: @(ViewBag.HeartRateZones[0])}, color: zonePalette[0] },
-                @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
+                                    { yaxis: { to: @(ViewBag.HeartRateZones[0])}, color: zonePalette[0] },
+                                @for (var i = 0; i < ViewBag.HeartRateZones.Length - 1; i++) {
 	                    <text>{ yaxis: { from: @(ViewBag.HeartRateZones[i]), to: @(ViewBag.HeartRateZones[i+1]) }, color: zonePalette[@(i)] },</text>
                     }
-                    { yaxis: { from: @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length-1])}, color: "#FFAAAA" }
+                                    { yaxis: { from: @(ViewBag.HeartRateZones[ViewBag.HeartRateZones.Length-1])}, color: "#FFAAAA" }
                 ];
                 var timePlotOptions = {
                     xaxes: [
@@ -401,7 +419,7 @@
                         },
                         {
                             position: "right",
-                            show: true,
+                            show: @(ViewBag.DisplayPace.ToString().ToLower()),
                             transform: function(v) { return -v; },
                             inverseTransform: function(v) { return -v; },
                             min: @(Model.FastestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
@@ -410,6 +428,18 @@
                                 return decimalMinutesToMMSS(val);
                             }
                         },
+                        {
+                            position: "right",
+                            show: @(ViewBag.DisplaySpeed.ToString().ToLower()),
+                            min: 0,
+                            max: @(Model.MaxSpeed.ToString("g", CultureInfo.InvariantCulture))
+                        },
+                        {
+                            position: "right",
+                            show: true,
+                            min: 0,
+                            max: @(Model.MaxSpeed.ToString("g", CultureInfo.InvariantCulture))
+                            },
                         {
                             position: "right",
                             show: false
@@ -431,11 +461,11 @@
                     legend: {
                         position: "s"
                     },
-                    crosshair: { 
+                    crosshair: {
                         mode: "x"
                     },
                     selection: {
-                    	mode: "x"
+                        mode: "x"
                     },
                     grid: {
                         hoverable: true,
@@ -463,7 +493,18 @@
                         yaxis: 2,
                         color: "#0000FF",
                         lines: {
-                            show: true
+                            show: @(ViewBag.DisplayPace.ToString().ToLower())
+                        }
+                    },
+                    {
+                        data: _.map(historyData, function(data) {
+                            return [data.distance, data.speed];
+                        }),
+                        label: "Speed",
+                        yaxis: 3,
+                        color: "#0000FF",
+                        lines: {
+                            show: @(ViewBag.DisplaySpeed.ToString().ToLower())
                         }
                     },
                     {
@@ -471,7 +512,7 @@
                             return [data.distance, data.cadence];
                         }),
                         label: "Cadence",
-                        yaxis: 3,
+                        yaxis: 4,
                         color: "#008800",
                         lines: {
                             show: false
@@ -482,7 +523,7 @@
                             return [data.distance, data.elevation];
                         }),
                         label: "Elevation",
-                        yaxis: 4,
+                        yaxis: 5,
                         color: "#A52525",
                         lines: {
                             show: false
@@ -493,7 +534,7 @@
                             return [data.distance, data.climb];
                         }),
                         label: "Climb",
-                        yaxis: 5,
+                        yaxis: 6,
                         color: "#AAAAAA",
                         lines: {
                             show: false
@@ -513,7 +554,7 @@
                         },
                         {
                             position: "right",
-                            show: true,
+                            show: @(ViewBag.DisplayPace.ToString().ToLower()),
                             transform: function(v) { return -v; },
                             inverseTransform: function(v) { return -v; },
                             min: @(Model.FastestPace.TotalMinutes.ToString("g", CultureInfo.InvariantCulture)),
@@ -521,6 +562,12 @@
                             tickFormatter: function(val, axis) {
                                 return decimalMinutesToMMSS(val);
                             }
+                        },
+                        {
+                            position: "right",
+                            show: @(ViewBag.DisplaySpeed.ToString().ToLower()),
+                            min: 0,
+                            max: @(Model.MaxSpeed.ToString("g", CultureInfo.InvariantCulture))
                         },
                         {
                             position: "right",
@@ -538,11 +585,11 @@
                     legend: {
                         position: "s"
                     },
-                    crosshair: { 
+                    crosshair: {
                         mode: "x"
                     },
                     selection: {
-                    	mode: "x"
+                        mode: "x"
                     },
                     grid: {
                         hoverable: true,
@@ -575,77 +622,78 @@
                 $("#distance_chart").on("plothover", onHover);
 
                 function rangeDetails(startIndex, endIndex) {
-                	var start = historyData[startIndex];
-                	var end = historyData[endIndex];
-                	var durationInMinutes = (end.time-start.time) / 60000;
-                	var totalDistance = end.distance - start.distance;
-                	var pace = durationInMinutes / totalDistance;
-                	var heartBeats = 0;
-                	var steps = 0;
-                	for (var index = startIndex; index <= endIndex; index++) {
-                		var deltaT = (historyData[index].time - historyData[index - 1].time) / 60000;
-                		heartBeats += historyData[index].heartRate * deltaT;
-                		steps += historyData[index].cadence * deltaT;
-                	}
-	                return "<b>" + moment(start.time).format("llll:ss") + " to " + moment(end.time).format("llll:ss")
-	                	+ "</b><table class='table table-condensed'><tr><th>Time</th><td>" + decimalMinutesToMMSS(durationInMinutes)
-	                	+ "</td></tr><tr><th>Distance</th><td>" + totalDistance.toFixed(2)
-	                	+ " km</td></tr><tr><th>Average heart rate</th><td>" + (heartBeats / durationInMinutes).toFixed(1)
-	                	+ "</td></tr><tr><th>Average pace</th><td>" + decimalMinutesToMMSS(pace)
-	                	+ " min/km</td></tr><tr><th>Average speed</th><td>" + (totalDistance / (durationInMinutes/60.0)).toFixed(1)
-	                	+ " km/h</td></tr><tr><th>Average cadence</th><td>" + (steps / durationInMinutes).toFixed(1)
-	                	+ "</td></tr></table>"
-	                	;
+                    var start = historyData[startIndex];
+                    var end = historyData[endIndex];
+                    var durationInMinutes = (end.time-start.time) / 60000;
+                    var totalDistance = end.distance - start.distance;
+                    var pace = durationInMinutes / totalDistance;
+                    var heartBeats = 0;
+                    var steps = 0;
+                    for (var index = startIndex; index <= endIndex; index++) {
+                        var deltaT = (historyData[index].time - historyData[index - 1].time) / 60000;
+                        heartBeats += historyData[index].heartRate * deltaT;
+                        steps += historyData[index].cadence * deltaT;
+                    }
+                    return "<b>" + moment(start.time).format("llll:ss") + " to " + moment(end.time).format("llll:ss")
+                        + "</b><table class='table table-condensed'><tr><th>Time</th><td>" + decimalMinutesToMMSS(durationInMinutes)
+                        + "</td></tr><tr><th>Distance</th><td>" + totalDistance.toFixed(2)
+                        + " km</td></tr><tr><th>Average heart rate</th><td>" + (heartBeats / durationInMinutes).toFixed(1)
+                        + "</td></tr><tr><th>Average pace</th><td>" + decimalMinutesToMMSS(pace)
+                        + " min/km</td></tr><tr><th>Average speed</th><td>" + (totalDistance / (durationInMinutes/60.0)).toFixed(1)
+                        + " km/h</td></tr><tr><th>Average cadence</th><td>" + (steps / durationInMinutes).toFixed(1)
+                        + "</td></tr></table>"
+                    ;
                 }
                 $("#time_chart").on("plotselected", function(event, ranges) {
-                	var startIndex = 0;
-                	for (; startIndex < historyData.length; startIndex++) {
-                		if (historyData[startIndex].time >= ranges.xaxis.from) {
-                			break;
-                		}
-                	}
-                	if (startIndex >= historyData.length) return;
-                	var endIndex = startIndex;
-                	for (; endIndex < historyData.length; endIndex++) {
-                		if (historyData[endIndex].time >= ranges.xaxis.to) {
-                			break;
-                		}
-                	}
-                	if (endIndex >= historyData.length) return;
-                	$("#chartSelectionInfo").html(rangeDetails(startIndex, endIndex));
-                	$("#chartSelectionBox").removeClass("hidden");
+                    var startIndex = 0;
+                    for (; startIndex < historyData.length; startIndex++) {
+                        if (historyData[startIndex].time >= ranges.xaxis.from) {
+                            break;
+                        }
+                    }
+                    if (startIndex >= historyData.length) return;
+                    var endIndex = startIndex;
+                    for (; endIndex < historyData.length; endIndex++) {
+                        if (historyData[endIndex].time >= ranges.xaxis.to) {
+                            break;
+                        }
+                    }
+                    if (endIndex >= historyData.length) return;
+                    $("#chartSelectionInfo").html(rangeDetails(startIndex, endIndex));
+                    $("#chartSelectionBox").removeClass("hidden");
                 });
                 $("#distance_chart").on("plotselected", function(event, ranges) {
-                	var startIndex = 0;
-                	for (; startIndex < historyData.length; startIndex++) {
-                		if (historyData[startIndex].distance >= ranges.xaxis.from) {
-                			break;
-                		}
-                	}
-                	if (startIndex >= historyData.length) return;
-                	var endIndex = startIndex;
-                	for (; endIndex < historyData.length; endIndex++) {
-                		if (historyData[endIndex].distance >= ranges.xaxis.to) {
-                			break;
-                		}
-                	}
-                	if (endIndex >= historyData.length) return;
-                	$("#chartSelectionInfo").html(rangeDetails(startIndex, endIndex));
-                	$("#chartSelectionBox").removeClass("hidden");
+                    var startIndex = 0;
+                    for (; startIndex < historyData.length; startIndex++) {
+                        if (historyData[startIndex].distance >= ranges.xaxis.from) {
+                            break;
+                        }
+                    }
+                    if (startIndex >= historyData.length) return;
+                    var endIndex = startIndex;
+                    for (; endIndex < historyData.length; endIndex++) {
+                        if (historyData[endIndex].distance >= ranges.xaxis.to) {
+                            break;
+                        }
+                    }
+                    if (endIndex >= historyData.length) return;
+                    $("#chartSelectionInfo").html(rangeDetails(startIndex, endIndex));
+                    $("#chartSelectionBox").removeClass("hidden");
                 });
                 $("#time_chart").on("plotunselected", function() {
-                	$("#chartSelectionBox").addClass("hidden");
+                    $("#chartSelectionBox").addClass("hidden");
                 });
                 $("#distance_chart").on("plotunselected", function() {
-                	$("#chartSelectionBox").addClass("hidden");
+                    $("#chartSelectionBox").addClass("hidden");
                 });
 
                 $("#time_series_selector input[type=checkbox]").change(function() {
                     timeSeries[0].lines.show = timePlotOptions.yaxes[0].show = $("#hr_time").prop('checked');
                     timeSeries[1].lines.show = timePlotOptions.yaxes[1].show = $("#pace_time").prop('checked');
-                    timeSeries[2].lines.show = timePlotOptions.yaxes[2].show = $("#cadence_time").prop('checked');
-                    timeSeries[3].lines.show = timePlotOptions.yaxes[3].show = $("#elevation_time").prop('checked');
-                    timeSeries[4].lines.show = timePlotOptions.yaxes[4].show = $("#climb_time").prop('checked');
+                    timeSeries[2].lines.show = timePlotOptions.yaxes[2].show = $("#speed_time").prop('checked');
+                    timeSeries[3].lines.show = timePlotOptions.yaxes[3].show = $("#cadence_time").prop('checked');
+                    timeSeries[4].lines.show = timePlotOptions.yaxes[4].show = $("#elevation_time").prop('checked');
+                    timeSeries[5].lines.show = timePlotOptions.yaxes[5].show = $("#climb_time").prop('checked');
                     if (timeSeries[0].lines.show) {
                         timePlotOptions.grid.markings = hrZones;
                     } else {
@@ -656,9 +704,10 @@
                 $("#distance_series_selector input[type=checkbox]").change(function() {
                     distanceSeries[0].lines.show = distancePlotOptions.yaxes[0].show = $("#hr_distance").prop('checked');
                     distanceSeries[1].lines.show = distancePlotOptions.yaxes[1].show = $("#pace_distance").prop('checked');
-                    distanceSeries[2].lines.show = distancePlotOptions.yaxes[2].show = $("#cadence_distance").prop('checked');
-                    distanceSeries[3].lines.show = distancePlotOptions.yaxes[3].show = $("#elevation_distance").prop('checked');
-                    distanceSeries[4].lines.show = distancePlotOptions.yaxes[4].show = $("#climb_distance").prop('checked');
+                    distanceSeries[2].lines.show = distancePlotOptions.yaxes[2].show = $("#speed_distance").prop('checked');
+                    distanceSeries[3].lines.show = distancePlotOptions.yaxes[3].show = $("#cadence_distance").prop('checked');
+                    distanceSeries[4].lines.show = distancePlotOptions.yaxes[4].show = $("#elevation_distance").prop('checked');
+                    distanceSeries[5].lines.show = distancePlotOptions.yaxes[5].show = $("#climb_distance").prop('checked');
                     if (distanceSeries[0].lines.show) {
                         distancePlotOptions.grid.markings = hrZones;
                     } else {

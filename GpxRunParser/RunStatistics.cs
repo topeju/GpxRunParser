@@ -32,8 +32,11 @@ namespace GpxRunParser
 		[JsonIgnore]
 		public TimeSpan SlowestPace { get; private set; }
 
-		// ReSharper disable MemberCanBePrivate.Global
-		[JsonIgnore]
+        [JsonIgnore]
+        public double MaxSpeed { get; private set; }
+
+        // ReSharper disable MemberCanBePrivate.Global
+        [JsonIgnore]
 		public double MinLatitude { get; private set; }
 		[JsonIgnore]
 		public double MaxLatitude { get; private set; }
@@ -126,6 +129,7 @@ namespace GpxRunParser
 			_lastIntervals = new PointIntervalData[Settings.AveragingPeriod];
 			FastestPace = Settings.SlowestDisplayedPace;
 			SlowestPace = new TimeSpan();
+            MaxSpeed = double.MinValue;
 		}
 
 		public void RefreshCalculatedProperties()
@@ -163,6 +167,7 @@ namespace GpxRunParser
 			}
 			point.Slope = 0.0D;
 			point.Pace = _lastPace;
+            point.Speed = 3600.0 / _lastPace.TotalSeconds;
 			_lastPoint = point;
 			RecordRoutePoint(point);
 		}
@@ -229,6 +234,8 @@ namespace GpxRunParser
 			} else {
 				point.Pace = Settings.SlowestDisplayedPace;
 			}
+            point.Speed = 3600.0 / averagedPace.TotalSeconds;
+            if (point.Speed > MaxSpeed) MaxSpeed = point.Speed;
 
 			// Cadence is number of full cycles per minute by the pair of feet, thus there are two steps per cadence per minute
 			TotalSteps += 2.0D * point.Cadence * deltaT.TotalMinutes;

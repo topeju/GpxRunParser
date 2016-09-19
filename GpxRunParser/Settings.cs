@@ -16,8 +16,11 @@ namespace GpxRunParser
 		public static readonly string RunStatsCacheFile = ConfigurationManager.AppSettings["RunStatsCacheFile"];
 		public static readonly TimeSpan AggregateSamplingPeriod;
 		public static readonly bool MinifyHtmlFiles = bool.Parse(ConfigurationManager.AppSettings["MinifyHtmlFiles"]);
+        public static readonly string ExerciseTitle = ConfigurationManager.AppSettings["ExerciseTitle"];
+        public static readonly bool DisplayPace = bool.Parse(ConfigurationManager.AppSettings["DisplayPace"]);
+        public static readonly bool DisplaySpeed = bool.Parse(ConfigurationManager.AppSettings["DisplaySpeed"]);
 
-		static Settings()
+        static Settings()
 		{
 			HeartRateZones = (from zone in ConfigurationManager.AppSettings["HeartRateZones"].Split(',')
 							  select double.Parse(zone, CultureInfo.InvariantCulture)).ToArray();
